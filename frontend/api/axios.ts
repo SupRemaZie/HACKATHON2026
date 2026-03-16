@@ -55,7 +55,7 @@ api.interceptors.response.use(
 
       } catch (refreshError) {
         // incase of failed refresh, re-direct to login page
-        window.location.href = "/login"; 
+        window.location.href = "/auth/login"; 
 
 // or window.location.href = "/login" if you do not use react-router-dom
 
