@@ -74,7 +74,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-carbon}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-carbon}
       # --- JPA / Hibernate ---
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=${DDL_AUTO:-update}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=${DDL_AUTO:-validate}
       - SPRING_JPA_SHOW_SQL=${SHOW_SQL:-false}
       # --- JWT ---
       - JWT_SECRET=${JWT_SECRET:-h4ck4th0n2026_s3cr3t_k3y_ch4ng3_m3!}
