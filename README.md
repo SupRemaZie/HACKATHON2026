@@ -74,7 +74,7 @@ La majorité des organisations manquent :
 ### Architecture globale
 
 ```
-[ Angular (Web) ]  ──REST──►  [ Spring Boot API ]  ──►  [ PostgreSQL ]
+[ Nextjs (Web) ]  ──REST──►  [ Spring Boot API ]  ──►  [ PostgreSQL ]
 [ React Native  ]  ──REST──►  [ Spring Boot API ]          ↑
                                       │                [ Scheduler Cron ]
                                       └──►  [ ADEME Emission Factors ]
@@ -94,7 +94,7 @@ docker compose up --build
 
 | Service | URL |
 |---------|-----|
-| Frontend Angular | http://localhost:4200 |
+| Frontend Nextjs | http://localhost:3000 |
 | API Spring Boot | http://localhost:8080 |
 | PostgreSQL | localhost:5432 |
 
@@ -117,7 +117,7 @@ docker compose up --build
   - Consommation énergétique annuelle (kWh)
   - Nombre d'employés et de postes de travail
   - Matériaux de construction + quantités (kg)
-- Formulaire Angular avec validation des champs
+- Formulaire Nextjs avec validation des champs
 - Stockage persistant PostgreSQL
 
 #### Calcul CO₂
@@ -125,7 +125,7 @@ docker compose up --build
 - **Construction** : `Σ (quantité_kg × facteur_ADEME)`
 - **Énergie** : `kWh × 0,0571 kgCO₂e/kWh` (mix électrique FR, RTE 2023)
 - **Parking** : `places × facteur_ACV / 50 ans`
-- Affichage immédiat du résultat dans Angular
+- Affichage immédiat du résultat dans Nextjs
 - Historisation automatique en base (`calculation_history`)
 
 #### Application mobile (React Native)
@@ -133,13 +133,13 @@ docker compose up --build
 - Authentification JWT partagée avec le backend
 - Appels API REST identiques au front web
 
-**Preuve de succès :** un site peut être saisi, son CO₂ calculé, le résultat affiché dans Angular, et la base contient au moins un historique.
+**Preuve de succès :** un site peut être saisi, son CO₂ calculé, le résultat affiché dans Nextjs, et la base contient au moins un historique.
 
 ---
 
 ### Palier 2 — Dashboard & Mobile complet
 
-#### Dashboard Angular
+#### Dashboard Nextjs
 
 KPIs affichés en temps réel :
 
@@ -177,7 +177,7 @@ Graphiques dynamiques (Chart.js / ng2-charts) :
 
 #### Export PDF
 - Rapport PDF par site : KPIs + graphiques + détail par catégorie
-- Téléchargement direct depuis le dashboard Angular
+- Téléchargement direct depuis le dashboard Nextjs
 
 #### Historisation avancée
 - Courbes d'évolution sur plusieurs années
@@ -372,7 +372,7 @@ GET    /api/emission-factors?cat=energy   Filtrés par catégorie
 |------|-----------------------------|-------------|
 | Tech Lead / Archi | Docker Compose, JWT, review inter-couches | Matin — critique |
 | Backend (Spring Boot) | API REST, calcul CO₂, cron, Flyway | J1 complet — critique |
-| Frontend (Angular) | Formulaire, dashboard, Chart.js, PDF | Après-midi J1 — critique |
+| Frontend (Nextjs) | Formulaire, dashboard, Chart.js, PDF | Après-midi J1 — critique |
 | Mobile (React Native) | Login, saisie terrain, indicateurs | Après-midi J1 — critique |
 | Chef de Projet / PO | Vision produit, backlog, pitch vidéo | Transverse J1+J2 |
 
