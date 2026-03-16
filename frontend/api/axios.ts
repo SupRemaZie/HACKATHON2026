@@ -1,5 +1,4 @@
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 
 export const api = axios.create({
   baseURL: "http://localhost:8080/api",
@@ -39,7 +38,7 @@ api.interceptors.response.use(
 
       // fetch new access token
       try {
-        const refresh_token_url = "add-your-refresh-token-endpoint"
+        const refresh_token_url = "/auth/refresh-token/"; 
         const response = await api.post(refresh_token_url, {
           refresh: localStorage.getItem("refresh"), // Get refresh token from local storage
         });
@@ -48,6 +47,7 @@ api.interceptors.response.use(
 
         localStorage.setItem("access", newAccesToken); // Update the access token in local storage
 
+        console.log("Access token refreshed successfully");
         // Re-try the original request
         const originalRequest = error.config;
         originalRequest.headers.Authorization = `Bearer ${newAccesToken}`;
@@ -55,8 +55,7 @@ api.interceptors.response.use(
 
       } catch (refreshError) {
         // incase of failed refresh, re-direct to login page
-        const navigate = useNavigate(); // If you have React-router-dom
-        navigate("/login");
+        window.location.href = "/login"; 
 
 // or window.location.href = "/login" if you do not use react-router-dom
 

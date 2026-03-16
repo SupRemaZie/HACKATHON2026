@@ -1,29 +1,58 @@
 "use client";
 import Link from 'next/link';
+import { loginApiRequest, testApiRequest } from './login.service';
+import { useState } from 'react';
+import { LoginRequestDTO } from '@/types/auth/authDTO';
 
 export default function LoginPage() {
   const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Tentative de connexion : Données envoyées au backend...");
-    alert("Vérifiez la console !");
+    console.log("Données envoyées au backend");
+  };
+
+  const [credentials, setCredentials] = useState<LoginRequestDTO>({ email: "admin@carbontrack.local", password: "admin123" });
+
+  const testLogin = async () => {
+    try {
+      const response = await loginApiRequest(credentials);
+          // const response = await testApiRequest();
+
+      console.log("Réponse de l'API test :", response.data);
+      localStorage.setItem("token", response.data.token);
+    } catch (error) {
+      console.error("Erreur lors de l'appel à l'API test :", error);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-green-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Connexion</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center text-black">Connexion</h2>
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
-            <input type="email" required className="mt-1 w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500" />
+            <label className="block text-sm font-medium text-black">Email</label>
+            <input 
+              type="email" 
+              required 
+              className="mt-1 w-full p-2 border text-black rounded-md focus:ring-blue-500 focus:border-blue-500" 
+              value={credentials.email}
+              onChange={(e) => setCredentials({...credentials, email: e.target.value})}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Mot de passe</label>
-            <input type="password" required className="mt-1 w-full p-2 border rounded-md" />
+            <label className="block text-sm font-medium text-black">Mot de passe</label>
+            <input 
+              type="password" 
+              required 
+              className="mt-1 w-full p-2 border text-black rounded-md focus:ring-blue-500 focus:border-blue-500" 
+              value={credentials.password}
+              onChange={(e) => setCredentials({...credentials, password: e.target.value})}
+            />
           </div>
-          <button type="submit" className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition">
+          <button type="submit" onClick={testLogin} className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition">
             Se connecter
           </button>
+
         </form>
         <p className="mt-4 text-sm text-center text-black">
           Pas de compte ? <Link href="/auth/register" className="text-green-600 hover:underline">S'inscrire</Link>
