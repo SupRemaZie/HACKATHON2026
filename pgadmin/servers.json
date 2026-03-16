@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "carbon-postgres",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "carbon_db",
+      "Username": "carbon",
+      "SSLMode": "prefer",
+      "PassFile": "/pgpass"
+    }
+  }
+}
