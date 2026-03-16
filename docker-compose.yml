@@ -1,0 +1,173 @@
+###############################################################################
+# docker-compose.yml – Hackathon 2026 : Empreinte Carbone d'un Site Physique
+#
+# Architecture :
+#   - frontend : React + Next.js (npm run dev via Node)
+#   - backend  : Spring Boot (API REST + JWT)
+#   - postgres : PostgreSQL 16
+#
+# Lancement : docker compose up
+# Arrêt     : docker compose down
+# Reset BDD : docker compose down -v   (supprime le volume pgdata)
+#
+# Variables surchargeables via un fichier .env à la racine du projet.
+###############################################################################
+
+name: carbon-footprint
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Frontend React + Next.js – Dashboard & formulaires de saisie
+  # ---------------------------------------------------------------------------
+  # Sert l'application React en mode développement (next dev server).
+  # ---------------------------------------------------------------------------
+  frontend:
+    image: node:${NODE_VERSION:-22}
+    container_name: carbon-frontend
+    working_dir: /app
+    env_file:
+      - .env
+    volumes:
+      # Monte le code source React pour le hot-reload (Next.js Fast Refresh)
+      - ./frontend:/app:cached
+      # Cache npm persistant pour accélérer les installations
+      - npm_cache:/root/.npm
+    command: sh -c "npm install && npm run dev -- --hostname 0.0.0.0 --port ${FRONTEND_PORT:-3000}"
+    ports:
+      - "${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"
+    environment:
+      - BACKEND_URL=${BACKEND_URL:-http://backend:8080}
+    networks:
+      - carbon-network
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Backend Spring Boot – API REST unique
+  # ---------------------------------------------------------------------------
+  # Expose l'ensemble des endpoints :
+  #   - CRUD sites (surface, parking, énergie, matériaux, employés)
+  #   - Calcul empreinte carbone (construction + exploitation)
+  #   - Authentification JWT
+  #   - Comparaison multi-sites, historisation, export PDF (paliers 2-3)
+  # ---------------------------------------------------------------------------
+  backend:
+    image: eclipse-temurin:21-jdk
+    container_name: carbon-backend
+    working_dir: /app
+    env_file:
+      - .env
+    volumes:
+      # Monte le code source du backend pour le développement local
+      - ./backend:/app:cached
+      # Cache Gradle persistant pour accélérer les builds successifs
+      - gradle_cache:/root/.gradle
+    command: sh -c "./gradlew bootRun --no-daemon"
+    ports:
+      - "${BACKEND_PORT:-8080}:${BACKEND_PORT:-8080}"
+    environment:
+      # --- Connexion PostgreSQL ---
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-carbon_db}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-carbon}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-carbon}
+      # --- JPA / Hibernate ---
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=${DDL_AUTO:-validate}
+      - SPRING_JPA_SHOW_SQL=${SHOW_SQL:-false}
+      # --- JWT ---
+      - JWT_SECRET=${JWT_SECRET:-h4ck4th0n2026_s3cr3t_k3y_ch4ng3_m3!}
+      - JWT_EXPIRATION_MS=${JWT_EXPIRATION_MS:-3600000}
+      # --- JVM ---
+      - JAVA_TOOL_OPTIONS=${JAVA_TOOL_OPTIONS:--Dfile.encoding=UTF-8 -Xms256m -Xmx512m}
+      # --- Spring Boot DevTools (rechargement auto en dev) ---
+      - SPRING_DEVTOOLS_RESTART_ENABLED=${DEVTOOLS_RESTART:-true}
+    networks:
+      - carbon-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:${BACKEND_PORT:-8080}/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ---------------------------------------------------------------------------
+  # pgAdmin 4 – Interface web d'administration PostgreSQL
+  # ---------------------------------------------------------------------------
+  # Accessible sur http://localhost:5050
+  # Login : ${PGADMIN_EMAIL:-admin@admin.com} / ${PGADMIN_PASSWORD:-admin}
+  # ---------------------------------------------------------------------------
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: carbon-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@admin.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-admin}
+    volumes:
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - carbon-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 16 – Base de données relationnelle
+  # ---------------------------------------------------------------------------
+  # Stocke les sites, calculs, historiques, utilisateurs.
+  # Les données survivent aux redémarrages grâce au volume nommé pgdata.
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16
+    container_name: carbon-postgres
+    env_file:
+      - .env
+    restart: unless-stopped
+    volumes:
+      # Persistance des données entre les redémarrages
+      - pgdata:/var/lib/postgresql/data
+      # Script d'initialisation optionnel (schéma, données de démo)
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-carbon}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-carbon}
+      - POSTGRES_DB=${POSTGRES_DB:-carbon_db}
+    networks:
+      - carbon-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-carbon} -d ${POSTGRES_DB:-carbon_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+# -----------------------------------------------------------------------------
+# Volumes nommés
+# -----------------------------------------------------------------------------
+volumes:
+  # Données PostgreSQL persistantes
+  pgdata:
+    driver: local
+  # Cache Gradle pour éviter de retélécharger les dépendances à chaque build
+  gradle_cache:
+    driver: local
+  # Cache npm pour éviter de retélécharger les dépendances React
+  npm_cache:
+    driver: local
+
+# -----------------------------------------------------------------------------
+# Réseau dédié – isolé du réseau Docker par défaut
+# -----------------------------------------------------------------------------
+networks:
+  carbon-network:
+    driver: bridge

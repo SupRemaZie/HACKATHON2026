@@ -1,0 +1,68 @@
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+export const api = axios.create({
+  baseURL: "http://localhost:8080/api",
+  headers: {
+    "Content-Type": "application/json"
+  }
+});
+
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers["Authorization"] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    console.error("Request error:", error);
+    return Promise.reject(error);
+  }
+);
+
+
+// Response interceptor to handle 401 and 403 response
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+
+// Check if error response is present and error status is 401 or 403
+    if (
+      error.response &&
+      (error.response.status === 401 || error.response.status === 403)
+    ) {
+      console.error("Response error :: "+ error.response.status +" ==>", error.response);
+
+      // fetch new access token
+      try {
+        const refresh_token_url = "add-your-refresh-token-endpoint"
+        const response = await api.post(refresh_token_url, {
+          refresh: localStorage.getItem("refresh"), // Get refresh token from local storage
+        });
+
+        const newAccesToken = response.data.access;
+
+        localStorage.setItem("access", newAccesToken); // Update the access token in local storage
+
+        // Re-try the original request
+        const originalRequest = error.config;
+        originalRequest.headers.Authorization = `Bearer ${newAccesToken}`;
+        return await axios(originalRequest);
+
+      } catch (refreshError) {
+        // incase of failed refresh, re-direct to login page
+        const navigate = useNavigate(); // If you have React-router-dom
+        navigate("/login");
+
+// or window.location.href = "/login" if you do not use react-router-dom
+
+        return await Promise.reject(refreshError);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
