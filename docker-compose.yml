@@ -1,7 +1,8 @@
 ###############################################################################
 # docker-compose.yml – Hackathon 2026 : Empreinte Carbone d'un Site Physique
 #
-# Architecture simplifiée (monolithe) :
+# Architecture :
+#   - frontend : React + Vite (npm run dev via Node)
 #   - backend  : Spring Boot (API REST + JWT)
 #   - postgres : PostgreSQL 16
 #
@@ -15,6 +16,37 @@
 name: carbon-footprint
 
 services:
+
+  # ---------------------------------------------------------------------------
+  # Frontend React + Vite – Dashboard & formulaires de saisie
+  # ---------------------------------------------------------------------------
+  # Sert l'application React en mode développement (vite dev server).
+  # Le proxy vers le backend (/api) est configuré dans vite.config.ts.
+  # ---------------------------------------------------------------------------
+  frontend:
+    image: node:${NODE_VERSION:-22}
+    container_name: carbon-frontend
+    working_dir: /app
+    env_file:
+      - .env
+    volumes:
+      # Monte le code source React pour le hot-reload (HMR Vite)
+      - ./frontend:/app:cached
+      # Cache npm persistant pour accélérer les installations
+      - npm_cache:/root/.npm
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port ${FRONTEND_PORT:-5173}"
+    ports:
+      - "${FRONTEND_PORT:-5173}:${FRONTEND_PORT:-5173}"
+    environment:
+      - BACKEND_URL=${BACKEND_URL:-http://backend:8080}
+      # Nécessaire pour que Vite détecte les changements de fichiers dans Docker
+      - CHOKIDAR_USEPOLLING=${CHOKIDAR_USEPOLLING:-true}
+    networks:
+      - carbon-network
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
 
   # ---------------------------------------------------------------------------
   # Backend Spring Boot – API REST unique
@@ -108,6 +140,9 @@ volumes:
     driver: local
   # Cache Gradle pour éviter de retélécharger les dépendances à chaque build
   gradle_cache:
+    driver: local
+  # Cache npm pour éviter de retélécharger les dépendances React
+  npm_cache:
     driver: local
 
 # -----------------------------------------------------------------------------
