@@ -97,6 +97,29 @@ services:
       start_period: 60s
 
   # ---------------------------------------------------------------------------
+  # pgAdmin 4 – Interface web d'administration PostgreSQL
+  # ---------------------------------------------------------------------------
+  # Accessible sur http://localhost:5050
+  # Login : ${PGADMIN_EMAIL:-admin@admin.com} / ${PGADMIN_PASSWORD:-admin}
+  # ---------------------------------------------------------------------------
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: carbon-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@admin.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-admin}
+    volumes:
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - carbon-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
   # PostgreSQL 16 – Base de données relationnelle
   # ---------------------------------------------------------------------------
   # Stocke les sites, calculs, historiques, utilisateurs.
