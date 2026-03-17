@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface SiteMaterialRepository extends JpaRepository<SiteMaterialJPA, Long> {
+public interface SiteMaterialRepository extends JpaRepository<SiteMaterialJPA, Long>
+{
     List<SiteMaterialJPA> findBySiteId(Long siteId);
 }
