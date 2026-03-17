@@ -5,7 +5,7 @@ import com.vdef.hackathon.dto.AdemePageDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.client.RestClientException;
 
 import java.util.List;
 
@@ -28,18 +28,22 @@ public class AdemeClient {
      * Exemple id : "K9ThCcjH4MzGRTkTJt9yq"
      */
     public AdemeLineDto findById(String id) {
-        AdemePageDto page = restClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/lines")
-                        .queryParam("qs", "_id:\"" + id + "\"")
-                        .build())
-                .retrieve()
-                .body(AdemePageDto.class);
+        try {
+            AdemePageDto page = restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/lines")
+                            .queryParam("qs", "_id:\"" + id + "\"")
+                            .build())
+                    .retrieve()
+                    .body(AdemePageDto.class);
 
-        if (page == null || page.getResults() == null || page.getResults().isEmpty()) {
+            if (page == null || page.getResults() == null || page.getResults().isEmpty()) {
+                return null;
+            }
+            return page.getResults().get(0);
+        } catch (RestClientException e) {
             return null;
         }
-        return page.getResults().get(0);
     }
 
     /**
@@ -47,19 +51,23 @@ public class AdemeClient {
      * Exemple q : "béton"
      */
     public List<AdemeLineDto> search(String q, int size) {
-        AdemePageDto page = restClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/lines")
-                        .queryParam("q", q)
-                        .queryParam("q_fields", "Nom_base_français")
-                        .queryParam("size", size)
-                        .build())
-                .retrieve()
-                .body(AdemePageDto.class);
+        try {
+            AdemePageDto page = restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/lines")
+                            .queryParam("q", q)
+                            .queryParam("q_fields", "Nom_base_français")
+                            .queryParam("size", size)
+                            .build())
+                    .retrieve()
+                    .body(AdemePageDto.class);
 
-        if (page == null || page.getResults() == null) {
+            if (page == null || page.getResults() == null) {
+                return List.of();
+            }
+            return page.getResults();
+        } catch (RestClientException e) {
             return List.of();
         }
-        return page.getResults();
     }
 }

@@ -41,6 +41,7 @@ CREATE TABLE sites (
 -- ------------------------------------------------------------
 CREATE TABLE emission_factors (
     id                   UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    ademe_id             VARCHAR(100),
     category             VARCHAR(100) NOT NULL,
     material_name        VARCHAR(255) NOT NULL,
     factor_kg_co2_per_kg FLOAT        NOT NULL,
