@@ -8,20 +8,20 @@ import jakarta.validation.constraints.Positive;
 public record CreateSiteRequest(
         @Schema(description = "Nom du site", example = "Capgemini Rennes")
         @NotBlank
-        String siteName,
+        String name,
 
         @Schema(description = "Adresse du site", example = "Avenue de Joinville")
-        String location,
+        String address,
 
         @Schema(description = "Ville du site", example = "Rennes")
         String city,
 
         @Schema(description = "Surface totale en m²", example = "11771")
         @Positive
-        Float areaM2,
+        Float surfaceM2,
 
         @Schema(description = "Nombre d'employés", example = "1800")
-        Integer employees,
+        Integer nbEmployees,
 
         @Schema(description = "Nombre de postes de travail", example = "1037")
         Integer nbWorkstations,
@@ -34,9 +34,6 @@ public record CreateSiteRequest(
 
         @Schema(description = "Places de parking aériens", example = "83")
         Integer parkingOutdoor,
-
-        @Schema(description = "Places de parking totale", example = "83")
-        Integer parkingSpots,
 
         @Schema(description = "Consommation annuelle en kWh", example = "1840000")
         @Positive

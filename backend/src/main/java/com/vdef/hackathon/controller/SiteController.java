@@ -24,14 +24,14 @@ public class SiteController {
     public String createSite(@RequestBody CreateSiteRequest request)
     {
         SiteJPA site = new SiteJPA();
-        site.setName(request.siteName());
-        site.setSurfaceM2(request.areaM2().doubleValue());
-        site.setNbEmployees(request.employees());
-        site.setNbWorkstations(request.nbWorkstations());
-        site.setParkingUnderground(request.parkingSpots());
-        site.setParkingOutdoor(request.parkingSpots());
-        site.setParkingBasement(request.parkingSpots());
-        site.setCreatedBy(UUID.fromString("00000000-0000-0000-0000-000000000001"));
+        site.setName(request.name());
+        site.setSurfaceM2(request.surfaceM2() != null ? request.surfaceM2().doubleValue() : null);
+        site.setNbEmployees(request.nbEmployees() != null ? request.nbEmployees() : 0);
+        site.setNbWorkstations(request.nbWorkstations() != null ? request.nbWorkstations() : 0);
+        site.setParkingUnderground(request.parkingUnderground() != null ? request.parkingUnderground() : 0);
+        site.setParkingOutdoor(request.parkingOutdoor() != null ? request.parkingOutdoor() : 0);
+        site.setParkingBasement(request.parkingBasement() != null ? request.parkingBasement() : 0);
+        site.setCreatedBy(1L);
         siteRepository.save(site);
         return "ok";
     }
