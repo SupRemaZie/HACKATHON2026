@@ -1,16 +1,14 @@
 package com.vdef.hackathon.jpa;
 
 import jakarta.persistence.*;
-import java.util.UUID;
 
 @Entity
 @Table(name = "calculation_history")
 public class CalculationHistoryJPA {
 
     @Id
-    @GeneratedValue
-    @Column(nullable = false, updatable = false)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "site_id", nullable = false)
@@ -41,7 +39,7 @@ public class CalculationHistoryJPA {
         this.co2TotalKg = co2TotalKg;
     }
 
-    public UUID getId() { return id; }
+    public Long getId() { return id; }
     public SiteJPA getSite() { return site; }
     public Integer getYear() { return year; }
     public Integer getMonth() { return month; }

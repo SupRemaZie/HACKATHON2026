@@ -2,12 +2,14 @@ package com.vdef.hackathon.dto.site;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Schema(description = "Réponse détail d'un site")
 public record SiteResponse(
-        @Schema(description = "ID unique du site")
-        UUID id,
+        @Schema(description = "ID interne du site")
+        Long id,
+
+        @Schema(description = "Token court pour les routes front (ex: rn001)")
+        String token,
 
         @Schema(description = "Nom du site")
         String name,
@@ -19,7 +21,7 @@ public record SiteResponse(
         String city,
 
         @Schema(description = "Surface totale en m²")
-        Float surfaceM2,
+        Double surfaceM2,
 
         @Schema(description = "Nombre d'employés")
         Integer nbEmployees,
@@ -35,12 +37,6 @@ public record SiteResponse(
 
         @Schema(description = "Places de parking aériens")
         Integer parkingOutdoor,
-
-        @Schema(description = "Consommation annuelle en kWh")
-        Float energyKwhYear,
-
-        @Schema(description = "Source d'énergie")
-        String energySource,
 
         @Schema(description = "Date de création")
         LocalDateTime createdAt,

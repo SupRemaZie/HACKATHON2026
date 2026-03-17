@@ -2,9 +2,9 @@ import { api } from "@/api/axios";
 import { LoginRequestDTO, LoginResponseDTO } from "@/types/auth/authDTO";
 
 export const testApiRequest = () => {
-  return api.get("/test");
+  return api.get("/api/test");
 };
 
 export const loginApiRequest = (credentials: LoginRequestDTO) => {
-  return api.post<LoginResponseDTO>("/auth/login", credentials);
+  return api.post<LoginResponseDTO>("/api/auth/login", credentials);
 };

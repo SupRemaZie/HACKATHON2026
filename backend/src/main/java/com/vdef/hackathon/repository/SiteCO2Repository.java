@@ -1,17 +1,15 @@
 package com.vdef.hackathon.repository;
 
 import com.vdef.hackathon.dto.SiteWithCO2DTO;
-import com.vdef.hackathon.jpa.*;
+import com.vdef.hackathon.jpa.SiteJPA;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.UUID;
 
 @Repository
-public interface SiteCO2Repository extends JpaRepository<SiteJPA, UUID>
-{
+public interface SiteCO2Repository extends JpaRepository<SiteJPA, Long> {
     @Query("""
         SELECT new com.vdef.hackathon.dto.SiteWithCO2DTO(
             s.id, c.co2TotalKg

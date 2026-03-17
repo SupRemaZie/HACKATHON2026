@@ -4,19 +4,21 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.security.SecureRandom;
 
 @Entity
 @Table(name = "sites")
 public class SiteJPA {
 
     @Id
-    @GeneratedValue
-    @Column(nullable = false, updatable = false)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true, length = 16)
+    private String token;
 
     @Column(name = "created_by", nullable = false)
-    private UUID createdBy;
+    private Long createdBy;
 
     @Column(nullable = false, length = 255)
     private String name;
@@ -53,103 +55,42 @@ public class SiteJPA {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    private static final String CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     public SiteJPA() {}
 
-    // Getters and Setters
-
-    public UUID getId() {
-        return id;
+    public static String generateRawToken() {
+        StringBuilder sb = new StringBuilder(8);
+        for (int i = 0; i < 8; i++) {
+            sb.append(CHARS.charAt(RANDOM.nextInt(CHARS.length())));
+        }
+        return sb.toString();
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public UUID getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(UUID createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
-    }
-
-    public Double getSurfaceM2() {
-        return surfaceM2;
-    }
-
-    public void setSurfaceM2(Double surfaceM2) {
-        this.surfaceM2 = surfaceM2;
-    }
-
-    public Integer getNbEmployees() {
-        return nbEmployees;
-    }
-
-    public void setNbEmployees(Integer nbEmployees) {
-        this.nbEmployees = nbEmployees;
-    }
-
-    public Integer getNbWorkstations() {
-        return nbWorkstations;
-    }
-
-    public void setNbWorkstations(Integer nbWorkstations) {
-        this.nbWorkstations = nbWorkstations;
-    }
-
-    public Integer getParkingUnderground() {
-        return parkingUnderground;
-    }
-
-    public void setParkingUnderground(Integer parkingUnderground) {
-        this.parkingUnderground = parkingUnderground;
-    }
-
-    public Integer getParkingBasement() {
-        return parkingBasement;
-    }
-
-    public void setParkingBasement(Integer parkingBasement) {
-        this.parkingBasement = parkingBasement;
-    }
-
-    public Integer getParkingOutdoor() {
-        return parkingOutdoor;
-    }
-
-    public void setParkingOutdoor(Integer parkingOutdoor) {
-        this.parkingOutdoor = parkingOutdoor;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
+    public Long getId() { return id; }
+    public String getToken() { return token; }
+    public void setToken(String token) { this.token = token; }
+    public Long getCreatedBy() { return createdBy; }
+    public void setCreatedBy(Long createdBy) { this.createdBy = createdBy; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+    public Double getSurfaceM2() { return surfaceM2; }
+    public void setSurfaceM2(Double surfaceM2) { this.surfaceM2 = surfaceM2; }
+    public Integer getNbEmployees() { return nbEmployees; }
+    public void setNbEmployees(Integer nbEmployees) { this.nbEmployees = nbEmployees; }
+    public Integer getNbWorkstations() { return nbWorkstations; }
+    public void setNbWorkstations(Integer nbWorkstations) { this.nbWorkstations = nbWorkstations; }
+    public Integer getParkingUnderground() { return parkingUnderground; }
+    public void setParkingUnderground(Integer parkingUnderground) { this.parkingUnderground = parkingUnderground; }
+    public Integer getParkingBasement() { return parkingBasement; }
+    public void setParkingBasement(Integer parkingBasement) { this.parkingBasement = parkingBasement; }
+    public Integer getParkingOutdoor() { return parkingOutdoor; }
+    public void setParkingOutdoor(Integer parkingOutdoor) { this.parkingOutdoor = parkingOutdoor; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

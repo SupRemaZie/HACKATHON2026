@@ -7,9 +7,7 @@ import org.springframework.stereotype.Service;
 import com.vdef.hackathon.repository.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class ServiceUser
@@ -21,9 +19,9 @@ public class ServiceUser
         this.repositoryUsers = repositoryUsers;
     }
 
-    public Optional<UserJPA> getUserByUUID(UUID uuid)
+    public Optional<UserJPA> getUserById(Long id)
     {
-        return repositoryUsers.findById(uuid);
+        return repositoryUsers.findById(id);
     }
 
     public Optional<UserJPA> getUserByEmail(String email)

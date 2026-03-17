@@ -2,16 +2,14 @@ package com.vdef.hackathon.jpa;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "carbon_calculations")
 public class CarbonCalculationJPA {
 
     @Id
-    @GeneratedValue
-    @Column(nullable = false, updatable = false)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "site_id", nullable = false)
@@ -40,7 +38,7 @@ public class CarbonCalculationJPA {
 
     public CarbonCalculationJPA() {}
 
-    public UUID getId() { return id; }
+    public Long getId() { return id; }
     public SiteJPA getSite() { return site; }
     public Double getCo2ConstructionKg() { return co2ConstructionKg; }
     public Double getCo2EnergyKg() { return co2EnergyKg; }

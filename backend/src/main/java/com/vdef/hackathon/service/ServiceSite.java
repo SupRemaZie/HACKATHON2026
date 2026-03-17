@@ -7,7 +7,6 @@ import com.vdef.hackathon.repository.*;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class ServiceSite
@@ -24,5 +23,5 @@ public class ServiceSite
         return repositorySites.findAll();
     }
 
-    public Optional<SiteJPA> getSiteByUUID(UUID uuid) {return repositorySites.findById(uuid);}
+    public Optional<SiteJPA> getSiteById(Long id) { return repositorySites.findById(id); }
 }
