@@ -30,24 +30,14 @@ public class DashboardKpiService {
         List<CarbonCalculationJPA> latest = calcRepo.findLatestPerSite();
 
         double totalCo2 = latest.stream().mapToDouble(CarbonCalculationJPA::getCo2TotalKg).sum();
-
-        double avgPerM2 = latest.stream()
-                .mapToDouble(CarbonCalculationJPA::getCo2PerM2)
-                .average().orElse(0);
-
-        double avgPerEmployee = latest.stream()
-                .mapToDouble(CarbonCalculationJPA::getCo2PerEmployee)
-                .average().orElse(0);
-
+        double avgPerM2 = latest.stream().mapToDouble(CarbonCalculationJPA::getCo2PerM2).average().orElse(0);
+        double avgPerEmployee = latest.stream().mapToDouble(CarbonCalculationJPA::getCo2PerEmployee).average().orElse(0);
         long siteCount = siteRepo.count();
 
         CarbonCalculationJPA top = latest.stream()
-                .max(Comparator.comparingDouble(CarbonCalculationJPA::getCo2TotalKg))
-                .orElse(null);
-
+                .max(Comparator.comparingDouble(CarbonCalculationJPA::getCo2TotalKg)).orElse(null);
         CarbonCalculationJPA low = latest.stream()
-                .min(Comparator.comparingDouble(CarbonCalculationJPA::getCo2TotalKg))
-                .orElse(null);
+                .min(Comparator.comparingDouble(CarbonCalculationJPA::getCo2TotalKg)).orElse(null);
 
         double constructionTotal = latest.stream().mapToDouble(CarbonCalculationJPA::getCo2ConstructionKg).sum();
         double energyTotal = latest.stream().mapToDouble(CarbonCalculationJPA::getCo2EnergyKg).sum();
@@ -65,8 +55,8 @@ public class DashboardKpiService {
                 round(avgPerM2),
                 round(avgPerEmployee),
                 siteCount,
-                top == null ? null : new SiteSummary(top.getSite().getId(), top.getSite().getName(), top.getCo2TotalKg()),
-                low == null ? null : new SiteSummary(low.getSite().getId(), low.getSite().getName(), low.getCo2TotalKg()),
+                top == null ? null : new SiteSummary(top.getSite().getId(), top.getSite().getToken(), top.getSite().getName(), top.getCo2TotalKg()),
+                low == null ? null : new SiteSummary(low.getSite().getId(), low.getSite().getToken(), low.getSite().getName(), low.getCo2TotalKg()),
                 new Co2Breakdown(constructionTotal, energyTotal, parkingTotal),
                 trend
         );

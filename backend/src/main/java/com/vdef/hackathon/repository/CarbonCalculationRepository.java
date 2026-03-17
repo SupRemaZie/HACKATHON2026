@@ -5,13 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
-import java.util.UUID;
 
-public interface CarbonCalculationRepository extends JpaRepository<CarbonCalculationJPA, UUID> {
+public interface CarbonCalculationRepository extends JpaRepository<CarbonCalculationJPA, Long> {
 
-    /**
-     * Retourne le dernier calcul par site (calculatedAt MAX).
-     */
     @Query("""
         SELECT cc FROM CarbonCalculationJPA cc
         WHERE cc.calculatedAt = (

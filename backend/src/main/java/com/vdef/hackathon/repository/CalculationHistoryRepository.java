@@ -5,14 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
-import java.util.UUID;
 
-public interface CalculationHistoryRepository extends JpaRepository<CalculationHistoryJPA, UUID> {
+public interface CalculationHistoryRepository extends JpaRepository<CalculationHistoryJPA, Long> {
 
-    /**
-     * Somme du CO₂ total de tous les sites, groupée par (année, mois), triée chronologiquement.
-     * Retourne Object[] { year (Integer), month (Integer), totalKg (Double) }
-     */
     @Query("""
         SELECT ch.year, ch.month, SUM(ch.co2TotalKg)
         FROM CalculationHistoryJPA ch
