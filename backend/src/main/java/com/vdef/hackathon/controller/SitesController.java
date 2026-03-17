@@ -1,8 +1,10 @@
 package com.vdef.hackathon.controller;
 
 import com.vdef.hackathon.dto.site.CreateSiteRequest;
+import com.vdef.hackathon.dto.site.SiteDashboardResponse;
 import com.vdef.hackathon.dto.site.SiteResponse;
 import com.vdef.hackathon.jpa.SiteJPA;
+import com.vdef.hackathon.repository.SiteMaterialRepository;
 import com.vdef.hackathon.repository.SiteRepository;
 import com.vdef.hackathon.service.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,10 +33,12 @@ public class SitesController {
 
     private final SiteRepository siteRepository;
     private final TokenService tokenService;
+    private final SiteMaterialRepository siteMaterialRepository;
 
-    public SitesController(SiteRepository siteRepository, TokenService tokenService) {
+    public SitesController(SiteRepository siteRepository, TokenService tokenService, SiteMaterialRepository siteMaterialRepository) {
         this.siteRepository = siteRepository;
         this.tokenService = tokenService;
+        this.siteMaterialRepository = siteMaterialRepository;
     }
 
     @GetMapping
@@ -135,13 +139,31 @@ public class SitesController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/{token}/dashboard")
+    @Operation(summary = "Récupérer les données dashboard d'un site")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Données du dashboard",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = SiteDashboardResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Non authentifié"),
+            @ApiResponse(responseCode = "403", description = "Accès refusé"),
+            @ApiResponse(responseCode = "404", description = "Site non trouvé")
+    })
+    public ResponseEntity<SiteDashboardResponse> getSiteDashboard(
+            @Parameter(description = "Token du site") @PathVariable String token) {
+        SiteJPA site = findAndVerifyOwnership(token);
+        return ResponseEntity.ok(new SiteDashboardResponse(
+                toResponse(site),
+                siteMaterialRepository.findBySiteId(site.getId())
+        ));
+    }
+
     // -------------------------------------------------------------------------
 
     private Long currentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !(auth.getPrincipal() instanceof Long)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Non authentifié");
-        }
+        // if (auth == null || !(auth.getPrincipal() instanceof Long)) {
+        //     throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Non authentifié");
+        // }
         return (Long) auth.getPrincipal();
     }
 
