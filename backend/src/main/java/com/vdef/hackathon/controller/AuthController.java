@@ -55,14 +55,15 @@ public class AuthController {
         user.setEmail(request.email());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setFullName(request.fullName());
+        user.setRole("USER");
         userRepository.save(user);
 
-        String token = jwtService.generateToken(user.getEmail(), expirationMillis);
-        String refreshToken = jwtService.generateRefreshToken(user.getEmail(), refreshExpirationMillis);
+        String token = jwtService.generateToken(user.getEmail(), user.getRole(), expirationMillis);
+        String refreshToken = jwtService.generateRefreshToken(user.getEmail(), user.getRole(), refreshExpirationMillis);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new LoginResponseDTO(
             token, "Bearer", expirationMillis / 1000,
-            user.getEmail(), refreshToken, refreshExpirationMillis / 1000
+            user.getEmail(), refreshToken, refreshExpirationMillis / 1000, user.getRole()
         ));
     }
 
@@ -72,11 +73,11 @@ public class AuthController {
         return userRepository.findByEmail(request.email())
             .filter(user -> passwordEncoder.matches(request.password(), user.getPasswordHash()))
             .map(user -> {
-                String token = jwtService.generateToken(user.getEmail(), expirationMillis);
-                String refreshToken = jwtService.generateRefreshToken(user.getEmail(), refreshExpirationMillis);
+                String token = jwtService.generateToken(user.getEmail(), user.getRole(), expirationMillis);
+                String refreshToken = jwtService.generateRefreshToken(user.getEmail(), user.getRole(), refreshExpirationMillis);
                 return ResponseEntity.ok((Object) new LoginResponseDTO(
                     token, "Bearer", expirationMillis / 1000,
-                    user.getEmail(), refreshToken, refreshExpirationMillis / 1000
+                    user.getEmail(), refreshToken, refreshExpirationMillis / 1000, user.getRole()
                 ));
             })
             .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -88,10 +89,11 @@ public class AuthController {
     public ResponseEntity<?> refreshToken(@Valid @RequestBody RefreshTokenRequestDTO request) {
         try {
             String email = jwtService.extractEmailFromRefreshToken(request.refreshToken());
-            String token = jwtService.generateToken(email, expirationMillis);
+            String role = jwtService.extractRoleFromRefreshToken(request.refreshToken());
+            String token = jwtService.generateToken(email, role, expirationMillis);
             return ResponseEntity.ok(new LoginResponseDTO(
                 token, "Bearer", expirationMillis / 1000,
-                email, request.refreshToken(), refreshExpirationMillis / 1000
+                email, request.refreshToken(), refreshExpirationMillis / 1000, role
             ));
         } catch (RuntimeException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

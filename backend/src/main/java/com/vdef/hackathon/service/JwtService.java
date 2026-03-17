@@ -28,7 +28,7 @@ public class JwtService {
         this.issuer = issuer;
     }
 
-    public String generateToken(String email, long expirationMillis) {
+    public String generateToken(String email, String role, long expirationMillis) {
         Instant now = Instant.now();
         Instant expiresAt = now.plusMillis(expirationMillis);
 
@@ -36,6 +36,7 @@ public class JwtService {
             .issuer(issuer)
             .subject(email)
             .claim("email", email)
+            .claim("role", role)
             .claim("type", "access")
             .issuedAt(Date.from(now))
             .expiration(Date.from(expiresAt))
@@ -43,7 +44,7 @@ public class JwtService {
             .compact();
     }
 
-    public String generateRefreshToken(String email, long expirationMillis) {
+    public String generateRefreshToken(String email, String role, long expirationMillis) {
         Instant now = Instant.now();
         Instant expiresAt = now.plusMillis(expirationMillis);
 
@@ -51,6 +52,7 @@ public class JwtService {
             .issuer(issuer)
             .subject(email)
             .claim("email", email)
+            .claim("role", role)
             .claim("type", "refresh")
             .issuedAt(Date.from(now))
             .expiration(Date.from(expiresAt))
@@ -59,18 +61,16 @@ public class JwtService {
     }
 
     public String extractEmail(String token) {
-        return Jwts.parser()
-            .verifyWith(signingKey)
-            .requireIssuer(issuer)
-            .build()
-            .parseSignedClaims(token)
-            .getPayload()
-            .getSubject();
+        return parseClaims(token).getSubject();
+    }
+
+    public String extractRole(String token) {
+        return parseClaims(token).get("role", String.class);
     }
 
     public boolean isTokenValid(String token) {
         try {
-            extractEmail(token);
+            parseClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
@@ -78,18 +78,29 @@ public class JwtService {
     }
 
     public String extractEmailFromRefreshToken(String refreshToken) {
-        Claims claims = Jwts.parser()
-            .verifyWith(signingKey)
-            .requireIssuer(issuer)
-            .build()
-            .parseSignedClaims(refreshToken)
-            .getPayload();
-
+        Claims claims = parseClaims(refreshToken);
         String tokenType = claims.get("type", String.class);
         if (!"refresh".equals(tokenType)) {
             throw new JwtException("Token is not a refresh token");
         }
-
         return claims.getSubject();
+    }
+
+    public String extractRoleFromRefreshToken(String refreshToken) {
+        Claims claims = parseClaims(refreshToken);
+        String tokenType = claims.get("type", String.class);
+        if (!"refresh".equals(tokenType)) {
+            throw new JwtException("Token is not a refresh token");
+        }
+        return claims.get("role", String.class);
+    }
+
+    private Claims parseClaims(String token) {
+        return Jwts.parser()
+            .verifyWith(signingKey)
+            .requireIssuer(issuer)
+            .build()
+            .parseSignedClaims(token)
+            .getPayload();
     }
 }

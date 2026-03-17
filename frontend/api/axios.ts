@@ -1,5 +1,4 @@
 import axios from "axios"
-import { useRouter } from "next/router"
 
 export const api = axios.create({
   baseURL: "http://localhost:8080/api",
@@ -40,28 +39,24 @@ api.interceptors.response.use(
 
       // fetch new access token
       try {
-        const refresh_token_url = "/auth/refresh-token/"; 
-        const response = await api.post(refresh_token_url, {
-          refresh: localStorage.getItem("refresh"), // Get refresh token from local storage
+        const response = await api.post("/auth/refresh-token", {
+          refreshToken: localStorage.getItem("refreshToken"),
         })
 
-        const newAccesToken = response.data.access
-
-        localStorage.setItem("access", newAccesToken) // Update the access token in local storage
+        const newAccessToken = response.data.token
+        localStorage.setItem("token", newAccessToken)
 
         console.log("Access token refreshed successfully");
         // Re-try the original request
         const originalRequest = error.config
-        originalRequest.headers.Authorization = `Bearer ${newAccesToken}`
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
         return await axios(originalRequest)
       } catch (refreshError) {
-        // incase of failed refresh, re-direct to login page
-        const router = useRouter()
-        router.push("/auth/login")
-
-        // or window.location.href = "/login" if you do not use react-router-dom
-
-        return await Promise.reject(refreshError)
+        localStorage.removeItem("token")
+        localStorage.removeItem("refreshToken")
+        localStorage.removeItem("role")
+        window.location.href = "/auth/login"
+        return Promise.reject(refreshError)
       }
     }
     return Promise.reject(error)

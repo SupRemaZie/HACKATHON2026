@@ -20,5 +20,8 @@ public record LoginResponseDTO(
         String refreshToken,
 
         @Schema(description = "Duree de vie du refresh token (en secondes)", example = "604800")
-        long refreshExpiresIn
+        long refreshExpiresIn,
+
+        @Schema(description = "Role de l'utilisateur", example = "USER")
+        String role
 ) {}

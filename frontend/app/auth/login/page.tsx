@@ -24,9 +24,13 @@ export default function LoginPage() {
       console.log("Réponse de l'API test :", response.data);
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
-        localStorage.setItem("refreshToken", response.data.refreshToken); // Store refresh token in local storage
+        localStorage.setItem("refreshToken", response.data.refreshToken);
+        localStorage.setItem("role", response.data.role ?? "USER");
+        // Cookie lisible par le middleware Next.js pour la protection des routes
+        document.cookie = `token=${response.data.token}; path=/; max-age=3600; SameSite=Strict`;
+        document.cookie = `role=${response.data.role ?? "USER"}; path=/; max-age=3600; SameSite=Strict`;
 
-        router.push("/dashboard"); // Redirect to dashboard after successful login
+        router.push("/dashboard");
       }
 
     } catch (error) {
