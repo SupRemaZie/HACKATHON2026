@@ -9,7 +9,6 @@ import com.vdef.hackathon.service.*;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 public class SiteController {
@@ -20,14 +19,14 @@ public class SiteController {
         this.siteService = siteService;
     }
 
-    @GetMapping("/site/{uuid}")
-    public Optional<SiteJPA> getSiteByUUID(@PathVariable UUID uuid)
+    @GetMapping("/site/{id}")
+    public Optional<SiteJPA> getSiteById(@PathVariable Long id)
     {
-        return siteService.getSiteByUUID(uuid);
+        return siteService.getSiteById(id);
     }
 
     @GetMapping("/sites")
-    public List<SiteJPA> getAllSites(@RequestParam int id) {
+    public List<SiteJPA> getAllSites() {
         return siteService.getSites();
     }
 }

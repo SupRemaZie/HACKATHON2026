@@ -6,9 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import com.vdef.hackathon.service.*;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 public class UserController
@@ -19,9 +17,9 @@ public class UserController
         this.userService = userService;
     }
 
-    @GetMapping("/user/{uuid}")
-    public Optional<UserJPA> getUserById(@PathVariable UUID uuid) {
-        return userService.getUserByUUID(uuid);
+    @GetMapping("/user/{id}")
+    public Optional<UserJPA> getUserById(@PathVariable Long id) {
+        return userService.getUserById(id);
     }
 
 }
