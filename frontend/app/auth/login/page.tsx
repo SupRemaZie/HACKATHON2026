@@ -3,8 +3,12 @@ import Link from 'next/link';
 import { loginApiRequest, testApiRequest } from './login.service';
 import { useState } from 'react';
 import { LoginRequestDTO } from '@/types/auth/authDTO';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
+
+  const router = useRouter();
+
   const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("Données envoyées au backend");
@@ -18,7 +22,13 @@ export default function LoginPage() {
           // const response = await testApiRequest();
 
       console.log("Réponse de l'API test :", response.data);
-      localStorage.setItem("token", response.data.token);
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("refreshToken", response.data.refreshToken); // Store refresh token in local storage
+
+        router.push("/dashboard"); // Redirect to dashboard after successful login
+      }
+
     } catch (error) {
       console.error("Erreur lors de l'appel à l'API test :", error);
     }
