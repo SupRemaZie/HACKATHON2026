@@ -40,5 +40,8 @@ public record CreateSiteRequest(
         Float eletricityMWh,
 
         @Schema(description = "Source d'énergie (electricity_fr, gaz_naturel, fioul)", example = "electricity_fr")
-        String energySource
+        String energySource,
+
+        @Schema(description = "Emission ID", example = "1")
+        Integer emissionId
 ) {}
