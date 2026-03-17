@@ -126,11 +126,8 @@ export default function DashboardSitePage() {
     async function loadDashboard() {
       setDashboardState({ kind: "loading" })
       try {
-        // TODO: Replace with real call once endpoint exists:
-        // const response = await api.get<SiteDashboardDTO>(`/sites/${id}/dashboard`)
-        // if (!cancelled) setDashboardState({ kind: "ready", data: response.data })
-        const data = await mockFetchSiteDashboard(id)
-        if (!cancelled) setDashboardState({ kind: "ready", data })
+        const response = await api.get<SiteDashboardDTO>(`/api/sites/${id}/dashboard`)
+        if (!cancelled) setDashboardState({ kind: "ready", data: response.data })
       } catch (e: unknown) {
         if (cancelled) return
         const axiosError = e as AxiosError<{ message?: string }>
