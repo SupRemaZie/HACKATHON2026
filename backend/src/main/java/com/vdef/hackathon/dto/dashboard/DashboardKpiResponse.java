@@ -1,7 +1,6 @@
 package com.vdef.hackathon.dto.dashboard;
 
 import java.util.List;
-import java.util.UUID;
 
 public record DashboardKpiResponse(
         double totalCo2Kg,
@@ -13,9 +12,7 @@ public record DashboardKpiResponse(
         Co2Breakdown breakdown,
         List<TrendPoint> trend
 ) {
-    public record SiteSummary(UUID id, String name, double co2Kg) {}
-
+    public record SiteSummary(Long id, String token, String name, double co2Kg) {}
     public record Co2Breakdown(double constructionKg, double energyKg, double parkingKg) {}
-
     public record TrendPoint(int year, int month, double totalKg) {}
 }

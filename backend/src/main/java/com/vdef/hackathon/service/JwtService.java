@@ -58,6 +58,25 @@ public class JwtService {
             .compact();
     }
 
+    public String extractEmail(String token) {
+        return Jwts.parser()
+            .verifyWith(signingKey)
+            .requireIssuer(issuer)
+            .build()
+            .parseSignedClaims(token)
+            .getPayload()
+            .getSubject();
+    }
+
+    public boolean isTokenValid(String token) {
+        try {
+            extractEmail(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
     public String extractEmailFromRefreshToken(String refreshToken) {
         Claims claims = Jwts.parser()
             .verifyWith(signingKey)
