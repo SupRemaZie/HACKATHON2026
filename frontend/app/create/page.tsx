@@ -288,7 +288,7 @@ export default function CreatePage() {
         </div>
 
         <Button variant="ghost" size="icon" className="absolute top-4 right-0" asChild>
-          <Link href="/">
+          <Link href="/dashboard">
             <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
             <span className="sr-only">Fermer</span>
           </Link>

@@ -1,14 +1,55 @@
 "use client";
-import Link from 'next/link';
-import { loginApiRequest } from './login.service';
-import { useState } from 'react';
-import { LoginRequestDTO } from '@/types/auth/authDTO';
-import { useRouter } from 'next/navigation';
+
+import Link from "next/link";
+import { loginApiRequest } from "./login.service";
+import { useState } from "react";
+import { LoginRequestDTO } from "@/types/auth/authDTO";
+import { useRouter } from "next/navigation";
+import { AxiosError } from "axios";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+
+function hasMessage(value: unknown): value is { message: string } {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  return typeof record.message === "string";
+}
+
+function getLoginErrorMessage(error: unknown): string {
+  const fallback = "Identifiants invalides. Veuillez réessayer.";
+
+  if (error instanceof AxiosError) {
+    const data: unknown = error.response?.data;
+    if (hasMessage(data)) return data.message;
+    if (typeof error.message === "string" && error.message.trim().length > 0) {
+      return error.message;
+    }
+    return fallback;
+  }
+
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message;
+  }
+
+  return fallback;
+}
 
 export default function LoginPage() {
-
   const router = useRouter();
-  const [credentials, setCredentials] = useState<LoginRequestDTO>({ email: "admin@hackathon.local", password: "password" });
+  const [credentials, setCredentials] = useState<LoginRequestDTO>({
+    email: "admin@carbontrack.local",
+    password: "password",
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,66 +61,83 @@ export default function LoginPage() {
     try {
       const response = await loginApiRequest(credentials);
 
-      console.log("Réponse de l'API :", response.data);
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
         localStorage.setItem("refreshToken", response.data.refreshToken);
         router.push("/dashboard");
       }
-    } catch (error: any) {
-      console.error("Erreur lors de la connexion :", error);
-      const errorMessage = error?.response?.data?.message || "Identifiants invalides. Veuillez réessayer.";
-      setError(errorMessage);
-      // alert(errorMessage);
+    } catch (err: unknown) {
+      setError(getLoginErrorMessage(err));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-green-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h2 className="text-2xl font-bold mb-6 text-center text-black">Connexion</h2>
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
-            {error}
-          </div>
-        )}
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-black">Email</label>
-            <input 
-              type="email" 
-              required 
-              disabled={loading}
-              className="mt-1 w-full p-2 border text-black rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100" 
-              value={credentials.email}
-              onChange={(e) => setCredentials({...credentials, email: e.target.value})}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-black">Mot de passe</label>
-            <input 
-              type="password" 
-              required 
-              disabled={loading}
-              className="mt-1 w-full p-2 border text-black rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100" 
-              value={credentials.password}
-              onChange={(e) => setCredentials({...credentials, password: e.target.value})}
-            />
-          </div>
-          <button 
-            type="submit" 
-            disabled={loading}
-            className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {loading ? "Connexion en cours..." : "Se connecter"}
-          </button>
-
-        </form>
-        <p className="mt-4 text-sm text-center text-black">
-          Pas de compte ? <Link href="/auth/register" className="text-green-600 hover:underline">S'inscrire</Link>
-        </p>
+    <div className="min-h-screen bg-background p-4">
+      <div className="mx-auto grid min-h-[calc(100vh-2rem)] max-w-sm place-items-center">
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle>Connexion</CardTitle>
+          <CardDescription>
+            Connectez-vous à votre compte CarbonTrack
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertTitle>Connexion impossible</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+            <FieldGroup>
+              <Field data-disabled={loading}>
+              <FieldLabel htmlFor="email">Email</FieldLabel>
+              <Input
+                id="email"
+                type="email"
+                required
+                disabled={loading}
+                placeholder="admin@carbontrack.local"
+                value={credentials.email}
+                onChange={(e) =>
+                  setCredentials({ ...credentials, email: e.target.value })
+                }
+              />
+              </Field>
+              <Field data-disabled={loading}>
+              <FieldLabel htmlFor="password">Mot de passe</FieldLabel>
+              <Input
+                id="password"
+                type="password"
+                required
+                disabled={loading}
+                placeholder="••••••••"
+                value={credentials.password}
+                onChange={(e) =>
+                  setCredentials({ ...credentials, password: e.target.value })
+                }
+              />
+              </Field>
+            </FieldGroup>
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? "Connexion en cours..." : "Se connecter"}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex justify-center">
+          <p className="text-sm text-muted-foreground">
+            Pas de compte ?{" "}
+            <Link
+              href="/auth/register"
+              className="font-medium text-primary hover:underline"
+            >
+              S&apos;inscrire
+            </Link>
+          </p>
+        </CardFooter>
+      </Card>
       </div>
     </div>
   );
