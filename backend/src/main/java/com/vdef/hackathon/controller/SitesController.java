@@ -49,8 +49,7 @@ public class SitesController {
             @ApiResponse(responseCode = "401", description = "Non authentifié")
     })
     public ResponseEntity<List<SiteResponse>> listSites() {
-        Long userId = currentUserId();
-        List<SiteResponse> sites = siteRepository.findByCreatedBy(userId)
+        List<SiteResponse> sites = siteRepository.findAll()
                 .stream().map(this::toResponse).toList();
         return ResponseEntity.ok(sites);
     }
