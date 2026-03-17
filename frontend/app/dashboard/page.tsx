@@ -1,102 +1,200 @@
 "use client";
-import { useState } from 'react';
 
-export default function CalculateurPage() {
-  // État pour les données du site
-  const [siteData, setSiteData] = useState({
-    name: '',
-    surface: 0,
-    parking: 0,
-    energyConsum: 0,
-    employees: 0,
-    materials: { beton: 0, acier: 0, verre: 0, bois: 0 }
-  });
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import type { AxiosError } from "axios";
 
-  // État pour les facteurs d'émission (modifiable par l'utilisateur)
-  const [factors, setFactors] = useState({
-    beton: 0.12,
-    acier: 0.60,
-    verre: 1.43,
-    bois: 0.03,
-    electricite: 0.06 // kgCO2e/kWh
-  });
+import { api } from "@/api/axios";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-  const [result, setResult] = useState<string | null>(null);
-
-
-const handleCalculate = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    // Calcul simple : (Consom * Facteur Energie) + Somme(Matériau * Facteur Matériau)
-    const carbonEnergy = siteData.energyConsum * factors.electricite;
-    const carbonMaterials = 
-        (siteData.materials.beton * factors.beton) +
-        (siteData.materials.acier * factors.acier) +
-        (siteData.materials.verre * factors.verre) +
-        (siteData.materials.bois * factors.bois);
-
-    setResult((carbonEnergy + carbonMaterials).toFixed(2));
+type SiteResponseDTO = {
+  id: number;
+  token: string;
+  name: string;
+  address: string | null;
+  city: string | null;
+  surfaceM2: number | null;
+  nbEmployees: number;
+  nbWorkstations: number;
+  parkingUnderground: number;
+  parkingBasement: number;
+  parkingOutdoor: number;
+  createdAt: string;
+  updatedAt: string;
 };
 
+type SitesState =
+  | { kind: "loading" }
+  | { kind: "error"; message: string }
+  | { kind: "ready"; sites: SiteResponseDTO[] };
+
+export default function DashboardPage() {
+  const router = useRouter();
+  const [sitesState, setSitesState] = useState<SitesState>({ kind: "loading" });
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    router.push("/auth/login");
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSites() {
+      setSitesState({ kind: "loading" });
+      try {
+        const response = await api.get<SiteResponseDTO[]>("/api/sites");
+        if (cancelled) return;
+        setSitesState({ kind: "ready", sites: response.data });
+      } catch (e: unknown) {
+        if (cancelled) return;
+
+        const axiosError = e as AxiosError<{ message?: string }>;
+        const message =
+          axiosError.response?.data?.message ??
+          axiosError.message ??
+          "Erreur lors du chargement des sites.";
+
+        setSitesState({ kind: "error", message });
+      }
+    }
+
+    void loadSites();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const sitesCount = useMemo(() => {
+    if (sitesState.kind !== "ready") return 0;
+    return sitesState.sites.length;
+  }, [sitesState]);
+
   return (
-    <div className="max-w-4xl mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-6 text-green-700">Calculateur d'Empreinte Carbone Site</h1>
-      
-      <form onSubmit={handleCalculate} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        
-        {/* SECTION 1 : INFOS SITE */}
-        <div className="space-y-4 p-4 border rounded-lg bg-gray-50 text-black">
-          <h2 className="font-semibold border-b pb-2">Informations du Site</h2>
-          <div>
-            <label className="block text-sm">Nom du site</label>
-            <input type="text" className="w-full p-2 border rounded" onChange={(e) => setSiteData({...siteData, name: e.target.value})} />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-sm">Surface (m²)</label>
-              <input type="number" className="w-full p-2 border rounded" onChange={(e) => setSiteData({...siteData, surface: parseFloat(e.target.value) || 0})} />
-            </div>
-            <div>
-              <label className="block text-sm">Parking (places)</label>
-              <input type="number" className="w-full p-2 border rounded" onChange={(e) => setSiteData({...siteData, parking: parseFloat(e.target.value) || 0})} />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm">Consommation Énergie (kWh/an)</label>
-            <input type="number" className="w-full p-2 border rounded" onChange={(e) => setSiteData({...siteData, energyConsum: parseFloat(e.target.value) || 0})} />
-          </div>
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">
+            Gérez vos sites et créez-en de nouveaux.
+          </p>
         </div>
 
-        {/* SECTION 2 : MATÉRIAUX & QUANTITÉS */}
-        <div className="space-y-4 p-4 border rounded-lg bg-gray-50 text-black">
-          <h2 className="font-semibold border-b pb-2">Matériaux Utilisés (kg)</h2>
-          {Object.keys(siteData.materials).map((mat) => (
-            <div key={mat} className="flex items-center justify-between">
-              <label className="capitalize text-sm">{mat}</label>
-              <input 
-                type="number" 
-                className="w-32 p-2 border rounded" 
-                onChange={(e) => setSiteData({
-                  ...siteData, 
-                  materials: {...siteData.materials, [mat]: parseFloat(e.target.value) || 0}
-                })} 
-              />
+        <div className="flex items-center gap-2">
+          <Button asChild>
+            <Link href="/create">Créer un site</Link>
+          </Button>
+          <Button variant="outline" onClick={handleLogout}>
+            Logout
+          </Button>
+        </div>
+      </header>
+
+      <Separator />
+
+      <main className="flex flex-col gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <CardTitle className="text-base">Mes sites</CardTitle>
+            <div className="text-sm text-muted-foreground">
+              {sitesState.kind === "ready" ? `${sitesCount} site(s)` : "—"}
             </div>
-          ))}
-        </div>
+          </CardHeader>
 
-        <button type="submit" className="md:col-span-2 bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition">
-          Calculer l'impact CO₂
-        </button>
-      </form>
+          <CardContent>
+            {sitesState.kind === "loading" && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Spinner />
+                Chargement des sites…
+              </div>
+            )}
 
-      {/* AFFICHAGE DU RÉSULTAT */}
-      {result && (
-        <div className="mt-8 p-6 bg-green-100 border-2 border-green-500 rounded-xl text-center">
-          <h3 className="text-xl text-black">Résultat Estimé pour {siteData.name}</h3>
-          <p className="text-4xl font-black text-green-900 mt-2">{result} kgCO₂e</p>
-        </div>
-      )}
+            {sitesState.kind === "error" && (
+              <div className="text-sm text-destructive">{sitesState.message}</div>
+            )}
+
+            {sitesState.kind === "ready" && sitesState.sites.length === 0 && (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyTitle>Aucun site</EmptyTitle>
+                  <EmptyDescription>
+                    Créez votre premier site pour commencer.
+                  </EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Button asChild>
+                    <Link href="/create">Créer un site</Link>
+                  </Button>
+                </EmptyContent>
+              </Empty>
+            )}
+
+            {sitesState.kind === "ready" && sitesState.sites.length > 0 && (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nom</TableHead>
+                    <TableHead>Ville</TableHead>
+                    <TableHead className="text-right">Surface (m²)</TableHead>
+                    <TableHead className="text-right">Employés</TableHead>
+                    <TableHead>Token</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sitesState.sites.map((s) => (
+                    <TableRow
+                      key={s.id}
+                      role="link"
+                      tabIndex={0}
+                      className="cursor-pointer"
+                      onClick={() => router.push(`/dashboard/${s.token}`)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          router.push(`/dashboard/${s.token}`);
+                        }
+                      }}
+                    >
+                      <TableCell className="font-medium">{s.name}</TableCell>
+                      <TableCell>{s.city ?? "—"}</TableCell>
+                      <TableCell className="text-right">
+                        {typeof s.surfaceM2 === "number" ? s.surfaceM2 : "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {s.nbEmployees}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {s.token}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </main>
     </div>
   );
 }
