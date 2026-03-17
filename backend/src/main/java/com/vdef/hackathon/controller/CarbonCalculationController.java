@@ -15,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/sites")
@@ -23,126 +22,84 @@ import java.util.UUID;
 @SecurityRequirement(name = "bearer-jwt")
 public class CarbonCalculationController {
 
-    @PostMapping("/{id}/calculate")
-    @Operation(
-            summary = "Calculer l'empreinte carbone d'un site",
-            description = "Déclenche le calcul d'émissions CO₂ pour un site (construction + énergie + parking) et l'enregistre en base"
-    )
+    @PostMapping("/{token}/calculate")
+    @Operation(summary = "Calculer l'empreinte carbone d'un site")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Calcul effectué",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = CarbonCalculationResponse.class))),
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
-            @ApiResponse(responseCode = "404", description = "Site non trouvé"),
-            @ApiResponse(responseCode = "500", description = "Erreur serveur")
+            @ApiResponse(responseCode = "404", description = "Site non trouvé")
     })
     public ResponseEntity<CarbonCalculationResponse> calculateCarbon(
-            @Parameter(description = "ID du site")
-            @PathVariable UUID id
-    ) {
-        // À implémenter
+            @Parameter(description = "Token du site") @PathVariable String token) {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/{id}/calculations")
-    @Operation(
-            summary = "Récupérer l'historique des calculs",
-            description = "Obtient la liste complète des calculs effectués pour un site"
-    )
+    @GetMapping("/{token}/calculations")
+    @Operation(summary = "Récupérer l'historique des calculs")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Historique des calculs",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = CarbonCalculationResponse[].class))),
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
-            @ApiResponse(responseCode = "404", description = "Site non trouvé"),
-            @ApiResponse(responseCode = "500", description = "Erreur serveur")
+            @ApiResponse(responseCode = "404", description = "Site non trouvé")
     })
     public ResponseEntity<List<CarbonCalculationResponse>> getCalculations(
-            @Parameter(description = "ID du site")
-            @PathVariable UUID id
-    ) {
-        // À implémenter
+            @Parameter(description = "Token du site") @PathVariable String token) {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/{id}/latest")
-    @Operation(
-            summary = "Récupérer le dernier calcul",
-            description = "Obtient le calcul carbone le plus récent pour un site"
-    )
+    @GetMapping("/{token}/latest")
+    @Operation(summary = "Récupérer le dernier calcul")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Dernier calcul",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = CarbonCalculationResponse.class))),
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
-            @ApiResponse(responseCode = "404", description = "Site ou calcul non trouvé"),
-            @ApiResponse(responseCode = "500", description = "Erreur serveur")
+            @ApiResponse(responseCode = "404", description = "Site ou calcul non trouvé")
     })
     public ResponseEntity<CarbonCalculationResponse> getLatestCalculation(
-            @Parameter(description = "ID du site")
-            @PathVariable UUID id
-    ) {
-        // À implémenter
+            @Parameter(description = "Token du site") @PathVariable String token) {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/{id}/history")
-    @Operation(
-            summary = "Récupérer l'historique d'évolution",
-            description = "Obtient la courbe d'évolution du CO₂ au fil du temps (données historisées)"
-    )
+    @GetMapping("/{token}/history")
+    @Operation(summary = "Récupérer l'historique d'évolution")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Courves d'évolution",
+            @ApiResponse(responseCode = "200", description = "Courbe d'évolution",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = CalculationHistoryResponse[].class))),
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
-            @ApiResponse(responseCode = "404", description = "Site non trouvé"),
-            @ApiResponse(responseCode = "500", description = "Erreur serveur")
+            @ApiResponse(responseCode = "404", description = "Site non trouvé")
     })
     public ResponseEntity<List<CalculationHistoryResponse>> getHistory(
-            @Parameter(description = "ID du site")
-            @PathVariable UUID id
-    ) {
-        // À implémenter
+            @Parameter(description = "Token du site") @PathVariable String token) {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/{id}/history/{year}")
-    @Operation(
-            summary = "Récupérer le snapshot d'une année",
-            description = "Obtient les données historisées pour une année spécifique"
-    )
+    @GetMapping("/{token}/history/{year}")
+    @Operation(summary = "Récupérer le snapshot d'une année")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Données de l'année",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = CalculationHistoryResponse[].class))),
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
-            @ApiResponse(responseCode = "404", description = "Site ou données non trouvées"),
-            @ApiResponse(responseCode = "500", description = "Erreur serveur")
+            @ApiResponse(responseCode = "404", description = "Site ou données non trouvées")
     })
     public ResponseEntity<List<CalculationHistoryResponse>> getHistoryByYear(
-            @Parameter(description = "ID du site")
-            @PathVariable UUID id,
-            @Parameter(description = "Année", example = "2025")
-            @PathVariable Integer year
-    ) {
-        // À implémenter
+            @Parameter(description = "Token du site") @PathVariable String token,
+            @Parameter(description = "Année", example = "2025") @PathVariable Integer year) {
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/compare")
-    @Operation(
-            summary = "Comparer plusieurs sites",
-            description = "Compare 2 ou plus de sites côte à côte (Palier 3)"
-    )
+    @Operation(summary = "Comparer plusieurs sites")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Comparaison des sites",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = SiteComparisonResponse[].class))),
-            @ApiResponse(responseCode = "400", description = "Paramètre 'ids' manquant ou invalide"),
+            @ApiResponse(responseCode = "400", description = "Paramètre 'tokens' manquant ou invalide"),
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
-            @ApiResponse(responseCode = "404", description = "Un ou plusieurs sites non trouvés"),
-            @ApiResponse(responseCode = "500", description = "Erreur serveur")
+            @ApiResponse(responseCode = "404", description = "Un ou plusieurs sites non trouvés")
     })
     public ResponseEntity<List<SiteComparisonResponse>> compareSites(
-            @Parameter(description = "IDs séparés par des virgules (ex: id1,id2,id3)")
-            @RequestParam String ids
-    ) {
-        // À implémenter
+            @Parameter(description = "Tokens séparés par des virgules (ex: rn001,pa001)")
+            @RequestParam String tokens) {
         return ResponseEntity.ok().build();
     }
 }

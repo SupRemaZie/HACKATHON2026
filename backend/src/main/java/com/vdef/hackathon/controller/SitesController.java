@@ -4,6 +4,7 @@ import com.vdef.hackathon.dto.site.CreateSiteRequest;
 import com.vdef.hackathon.dto.site.SiteResponse;
 import com.vdef.hackathon.jpa.SiteJPA;
 import com.vdef.hackathon.repository.SiteRepository;
+import com.vdef.hackathon.repository.UserRepository;
 import com.vdef.hackathon.service.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,10 +31,12 @@ import java.util.List;
 public class SitesController {
 
     private final SiteRepository siteRepository;
+    private final UserRepository userRepository;
     private final TokenService tokenService;
 
-    public SitesController(SiteRepository siteRepository, TokenService tokenService) {
+    public SitesController(SiteRepository siteRepository, UserRepository userRepository, TokenService tokenService) {
         this.siteRepository = siteRepository;
+        this.userRepository = userRepository;
         this.tokenService = tokenService;
     }
 
@@ -139,10 +142,12 @@ public class SitesController {
 
     private Long currentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !(auth.getPrincipal() instanceof Long)) {
+        if (auth == null || !(auth.getPrincipal() instanceof String email)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Non authentifié");
         }
-        return (Long) auth.getPrincipal();
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur introuvable"))
+            .getId();
     }
 
     private SiteJPA findAndVerifyOwnership(String token) {
