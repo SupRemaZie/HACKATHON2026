@@ -2,7 +2,7 @@ import axios from "axios"
 import { useRouter } from "next/router"
 
 export const api = axios.create({
-  baseURL: "http://localhost:8080/api",
+  baseURL: "http://localhost:8080",
   headers: {
     "Content-Type": "application/json",
   },
@@ -40,7 +40,7 @@ api.interceptors.response.use(
 
       // fetch new access token
       try {
-        const refresh_token_url = "/auth/refresh-token/"; 
+        const refresh_token_url = "/api/auth/refresh-token/"; 
         const response = await api.post(refresh_token_url, {
           refresh: localStorage.getItem("refresh"), // Get refresh token from local storage
         })

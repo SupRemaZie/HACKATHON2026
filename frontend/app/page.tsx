@@ -20,14 +20,15 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import React from "react"
+import { api } from "@/api/axios"
 
 export default function Page() {
   const [status, setStatus] = React.useState<string>("")
 
   const checkBackend = async () => {
     try {
-      const res = await fetch("/api/health")
-      setStatus(res.ok ? "Backend OK" : `Erreur ${res.status}`)
+      const res = await api.get("/actuator/health")
+      setStatus(res.data.status === "UP" ? "Backend OK" : `Erreur ${res.data.status}`)
     } catch {
       setStatus("Backend injoignable")
     }
