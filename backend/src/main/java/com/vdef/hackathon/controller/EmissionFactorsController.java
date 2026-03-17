@@ -1,6 +1,8 @@
 package com.vdef.hackathon.controller;
 
 import com.vdef.hackathon.dto.emission.EmissionFactorResponse;
+import com.vdef.hackathon.jpa.EmissionFactorJPA;
+import com.vdef.hackathon.repository.EmissionFactorRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,6 +20,12 @@ import java.util.List;
 @Tag(name = "Facteurs d'émission", description = "Référentiel ADEME des facteurs d'émission CO₂")
 public class EmissionFactorsController {
 
+    private final EmissionFactorRepository repository;
+
+    public EmissionFactorsController(EmissionFactorRepository repository) {
+        this.repository = repository;
+    }
+
     @GetMapping
     @Operation(
             summary = "Récupérer tous les facteurs d'émission",
@@ -29,8 +37,10 @@ public class EmissionFactorsController {
             @ApiResponse(responseCode = "500", description = "Erreur serveur")
     })
     public ResponseEntity<List<EmissionFactorResponse>> getAllFactors() {
-        // À implémenter
-        return ResponseEntity.ok().build();
+        List<EmissionFactorResponse> factors = repository.findAll().stream()
+                .map(this::toResponse)
+                .toList();
+        return ResponseEntity.ok(factors);
     }
 
     @GetMapping(params = "category")
@@ -48,7 +58,14 @@ public class EmissionFactorsController {
             @Parameter(description = "Catégorie de filtre (construction, energy, parking)", example = "energy")
             @RequestParam String category
     ) {
-        // À implémenter
-        return ResponseEntity.ok().build();
+        List<EmissionFactorResponse> factors = repository.findByCategory(category).stream()
+                .map(this::toResponse)
+                .toList();
+        return ResponseEntity.ok(factors);
+    }
+
+    private EmissionFactorResponse toResponse(EmissionFactorJPA e) {
+        return new EmissionFactorResponse(e.getId(), e.getCategory(), e.getMaterialName(),
+                e.getFactorKgCo2PerKg(), e.getUnit(), e.getSource(), e.getYear());
     }
 }
