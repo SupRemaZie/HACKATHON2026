@@ -272,7 +272,7 @@ export default function CreatePage() {
           Continuer
         </Button>
       ) : (
-        <Button disabled={!isStepValid(4)} onClick={handleCreateSite}>Créer le site (mock)</Button>
+        <Button disabled={!isStepValid(4)} onClick={handleCreateSite}>Créer le site</Button>
       )}
     </CardFooter>
   )
@@ -332,7 +332,10 @@ export default function CreatePage() {
                       <InputGroupInput
                         id="s1-name"
                         value={draft.siteName}
-                        onChange={(e) => setDraft((p) => ({ ...p, siteName: e.currentTarget.value }))}
+                        onChange={(e) => {
+                          const value = e.currentTarget.value
+                          setDraft((p) => ({ ...p, siteName: value }))
+                        }}
                         placeholder="Campus Rennes"
                       />
                     </InputGroup>
@@ -343,7 +346,10 @@ export default function CreatePage() {
                       <InputGroupInput
                         id="s1-location"
                         value={draft.location}
-                        onChange={(e) => setDraft((p) => ({ ...p, location: e.currentTarget.value }))}
+                        onChange={(e) => {
+                          const value = e.currentTarget.value
+                          setDraft((p) => ({ ...p, location: value }))
+                        }}
                         placeholder="Rennes"
                       />
                     </InputGroup>
@@ -377,7 +383,10 @@ export default function CreatePage() {
                         id="s2-area"
                         inputMode="decimal"
                         value={draft.areaM2 ? String(draft.areaM2) : ""}
-                        onChange={(e) => setDraft((p) => ({ ...p, areaM2: parseNumber(e.currentTarget.value) }))}
+                        onChange={(e) => {
+                          const value = e.currentTarget.value
+                          setDraft((p) => ({ ...p, areaM2: parseNumber(value) }))
+                        }}
                       />
                     </InputGroup>
                   </Field>
@@ -388,7 +397,10 @@ export default function CreatePage() {
                         id="s2-parking"
                         inputMode="decimal"
                         value={draft.parkingSpots ? String(draft.parkingSpots) : ""}
-                        onChange={(e) => setDraft((p) => ({ ...p, parkingSpots: parseNumber(e.currentTarget.value) }))}
+                        onChange={(e) => {
+                          const value = e.currentTarget.value
+                          setDraft((p) => ({ ...p, parkingSpots: parseNumber(value) }))
+                        }}
                       />
                     </InputGroup>
                   </Field>
@@ -399,7 +411,10 @@ export default function CreatePage() {
                         id="s2-elec"
                         inputMode="decimal"
                         value={draft.electricityMWh ? String(draft.electricityMWh) : ""}
-                        onChange={(e) => setDraft((p) => ({ ...p, electricityMWh: parseNumber(e.currentTarget.value) }))}
+                        onChange={(e) => {
+                          const value = e.currentTarget.value
+                          setDraft((p) => ({ ...p, electricityMWh: parseNumber(value) }))
+                        }}
                       />
                     </InputGroup>
                   </Field>
@@ -410,7 +425,10 @@ export default function CreatePage() {
                         id="s2-gas"
                         inputMode="decimal"
                         value={draft.gasMWh ? String(draft.gasMWh) : ""}
-                        onChange={(e) => setDraft((p) => ({ ...p, gasMWh: parseNumber(e.currentTarget.value) }))}
+                        onChange={(e) => {
+                          const value = e.currentTarget.value
+                          setDraft((p) => ({ ...p, gasMWh: parseNumber(value) }))
+                        }}
                       />
                     </InputGroup>
                   </Field>
@@ -421,7 +439,10 @@ export default function CreatePage() {
                         id="s2-employees"
                         inputMode="decimal"
                         value={draft.employees ? String(draft.employees) : ""}
-                        onChange={(e) => setDraft((p) => ({ ...p, employees: parseNumber(e.currentTarget.value) }))}
+                        onChange={(e) => {
+                          const value = e.currentTarget.value
+                          setDraft((p) => ({ ...p, employees: parseNumber(value) }))
+                        }}
                       />
                     </InputGroup>
                   </Field>
@@ -566,7 +587,10 @@ function MaterialCategorySection(props: Readonly<{
                 id={`mat-${row.id}`}
                 inputMode="decimal"
                 value={row.quantity ? String(row.quantity) : ""}
-                onChange={(e) => props.onChange(row.id, e.currentTarget.value)}
+                onChange={(e) => {
+                  const value = e.currentTarget.value
+                  props.onChange(row.id, value)
+                }}
               />
             </InputGroup>
             <FieldDescription>Unité : {row.unit}</FieldDescription>
