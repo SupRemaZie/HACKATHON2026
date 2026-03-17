@@ -49,12 +49,14 @@ public class AuthController {
     public AuthController(
         JwtService jwtService,
         ServiceUser serviceUser,
+        UserRepository userRepository,
         PasswordEncoder passwordEncoder,
         @org.springframework.beans.factory.annotation.Value("${JWT_EXPIRATION_MS:3600000}") long expirationMillis,
         @org.springframework.beans.factory.annotation.Value("${JWT_REFRESH_EXPIRATION_MS:604800000}") long refreshExpirationMillis
     ) {
         this.jwtService = jwtService;
         this.serviceUser = serviceUser;
+        this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.expirationMillis = expirationMillis;
         this.refreshExpirationMillis = refreshExpirationMillis;
@@ -70,24 +72,26 @@ public class AuthController {
         UserJPA user = serviceUser.getUserByEmail(request.email()).orElse(null);
 
         boolean isValid = user != null
-            && passwordEncoder.matches(request.password(), user.getPasswordHash());
+                && passwordEncoder.matches(request.password(), user.getPasswordHash());
 
         if (!isValid) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(java.util.Map.of("message", "Invalid email or password"));
+                    .body(java.util.Map.of("message", "Invalid email or password"));
         }
 
         String token = jwtService.generateToken(user.getEmail(), user.getRole(), expirationMillis);
         String refreshToken = jwtService.generateRefreshToken(user.getEmail(), refreshExpirationMillis);
 
         LoginResponseDTO response = new LoginResponseDTO(
-            token,
-            "Bearer",
-            expirationMillis / 1000,
-            user.getEmail(),
-            refreshToken,
-            refreshExpirationMillis / 1000
+                token,
+                "Bearer",
+                expirationMillis / 1000,
+                user.getEmail(),
+                refreshToken,
+                refreshExpirationMillis / 1000
         );
+        return ResponseEntity.ok(response);
+    }
     @PostMapping("/register")
     @Operation(summary = "Créer un compte utilisateur")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
@@ -102,7 +106,7 @@ public class AuthController {
         user.setFullName(request.fullName());
         userRepository.save(user);
 
-        String token = jwtService.generateToken(user.getEmail(), expirationMillis);
+        String token = jwtService.generateToken(user.getEmail(), user.getRole(), expirationMillis);
         String refreshToken = jwtService.generateRefreshToken(user.getEmail(), refreshExpirationMillis);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new LoginResponseDTO(
