@@ -1,11 +1,26 @@
 package com.vdef.hackathon.controller;
 
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.vdef.hackathon.dto.auth.AuthResponse;
 import com.vdef.hackathon.dto.auth.LoginRequestDTO;
 import com.vdef.hackathon.dto.auth.LoginResponseDTO;
 import com.vdef.hackathon.dto.auth.RefreshTokenRequestDTO;
 import com.vdef.hackathon.dto.auth.RegisterRequest;
+import com.vdef.hackathon.dto.auth.UserSummaryDTO;
+import com.vdef.hackathon.jpa.UserJPA;
 import com.vdef.hackathon.service.JwtService;
+import com.vdef.hackathon.service.ServiceUser;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,57 +28,56 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "Authentification", description = "Endpoints d'authentification et d'inscription")
 public class AuthController {
     private final JwtService jwtService;
-    private final String defaultEmail;
-    private final String defaultPassword;
+    private final ServiceUser serviceUser;
+    private final PasswordEncoder passwordEncoder;
     private final long expirationMillis;
     private final long refreshExpirationMillis;
 
     public AuthController(
         JwtService jwtService,
-        @Value("${APP_AUTH_DEFAULT_EMAIL:admin@carbontrack.local}") String defaultEmail,
-        @Value("${APP_AUTH_DEFAULT_PASSWORD:admin123}") String defaultPassword,
-        @Value("${JWT_EXPIRATION_MS:3600000}") long expirationMillis,
-        @Value("${JWT_REFRESH_EXPIRATION_MS:604800000}") long refreshExpirationMillis
+        ServiceUser serviceUser,
+        PasswordEncoder passwordEncoder,
+        @org.springframework.beans.factory.annotation.Value("${JWT_EXPIRATION_MS:3600000}") long expirationMillis,
+        @org.springframework.beans.factory.annotation.Value("${JWT_REFRESH_EXPIRATION_MS:604800000}") long refreshExpirationMillis
     ) {
         this.jwtService = jwtService;
-        this.defaultEmail = defaultEmail;
-        this.defaultPassword = defaultPassword;
+        this.serviceUser = serviceUser;
+        this.passwordEncoder = passwordEncoder;
         this.expirationMillis = expirationMillis;
         this.refreshExpirationMillis = refreshExpirationMillis;
     }
 
+    @GetMapping("/users")
+    public ResponseEntity<List<UserSummaryDTO>> users() {
+        return ResponseEntity.ok(serviceUser.getAllUsersSummary());
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO request) {
-        boolean isValid = defaultEmail.equalsIgnoreCase(request.email())
-            && defaultPassword.equals(request.password());
+        UserJPA user = serviceUser.getUserByEmail(request.email()).orElse(null);
+
+        boolean isValid = user != null
+            && passwordEncoder.matches(request.password(), user.getPasswordHash());
 
         if (!isValid) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(java.util.Map.of("message", "Invalid email or password"));
         }
 
-        String token = jwtService.generateToken(request.email(), expirationMillis);
-        String refreshToken = jwtService.generateRefreshToken(request.email(), refreshExpirationMillis);
+        String token = jwtService.generateToken(user.getEmail(), expirationMillis);
+        String refreshToken = jwtService.generateRefreshToken(user.getEmail(), refreshExpirationMillis);
 
         LoginResponseDTO response = new LoginResponseDTO(
             token,
             "Bearer",
             expirationMillis / 1000,
-            request.email(),
+            user.getEmail(),
             refreshToken,
             refreshExpirationMillis / 1000
         );

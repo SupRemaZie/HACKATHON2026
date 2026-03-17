@@ -1,6 +1,6 @@
 "use client";
 import Link from 'next/link';
-import { loginApiRequest, testApiRequest } from './login.service';
+import { loginApiRequest } from './login.service';
 import { useState } from 'react';
 import { LoginRequestDTO } from '@/types/auth/authDTO';
 import { useRouter } from 'next/navigation';
@@ -8,29 +8,31 @@ import { useRouter } from 'next/navigation';
 export default function LoginPage() {
 
   const router = useRouter();
+  const [credentials, setCredentials] = useState<LoginRequestDTO>({ email: "admin@hackathon.local", password: "password" });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Données envoyées au backend");
-  };
+    setError(null);
+    setLoading(true);
 
-  const [credentials, setCredentials] = useState<LoginRequestDTO>({ email: "admin@carbontrack.local", password: "admin123" });
-
-  const testLogin = async () => {
     try {
       const response = await loginApiRequest(credentials);
-          // const response = await testApiRequest();
 
-      console.log("Réponse de l'API test :", response.data);
+      console.log("Réponse de l'API :", response.data);
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
-        localStorage.setItem("refreshToken", response.data.refreshToken); // Store refresh token in local storage
-
-        router.push("/dashboard"); // Redirect to dashboard after successful login
+        localStorage.setItem("refreshToken", response.data.refreshToken);
+        router.push("/dashboard");
       }
-
-    } catch (error) {
-      console.error("Erreur lors de l'appel à l'API test :", error);
+    } catch (error: any) {
+      console.error("Erreur lors de la connexion :", error);
+      const errorMessage = error?.response?.data?.message || "Identifiants invalides. Veuillez réessayer.";
+      setError(errorMessage);
+      // alert(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -38,13 +40,19 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-green-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
         <h2 className="text-2xl font-bold mb-6 text-center text-black">Connexion</h2>
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
+            {error}
+          </div>
+        )}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-black">Email</label>
             <input 
               type="email" 
               required 
-              className="mt-1 w-full p-2 border text-black rounded-md focus:ring-blue-500 focus:border-blue-500" 
+              disabled={loading}
+              className="mt-1 w-full p-2 border text-black rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100" 
               value={credentials.email}
               onChange={(e) => setCredentials({...credentials, email: e.target.value})}
             />
@@ -54,13 +62,18 @@ export default function LoginPage() {
             <input 
               type="password" 
               required 
-              className="mt-1 w-full p-2 border text-black rounded-md focus:ring-blue-500 focus:border-blue-500" 
+              disabled={loading}
+              className="mt-1 w-full p-2 border text-black rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100" 
               value={credentials.password}
               onChange={(e) => setCredentials({...credentials, password: e.target.value})}
             />
           </div>
-          <button type="submit" onClick={testLogin} className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition">
-            Se connecter
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            {loading ? "Connexion en cours..." : "Se connecter"}
           </button>
 
         </form>
