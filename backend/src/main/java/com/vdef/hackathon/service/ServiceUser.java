@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.vdef.hackathon.repository.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,12 +27,12 @@ public class ServiceUser
 
     public Optional<UserJPA> getUserByEmail(String email)
     {
-        return repositoryUsers.findByEmailIgnoreCase(email);
+        return repositoryUsers.findByEmail(email);
     }
 
     public boolean isValidCredentials(String email, String rawPassword, PasswordEncoder passwordEncoder)
     {
-        return repositoryUsers.findByEmailIgnoreCase(email)
+        return repositoryUsers.findByEmail(email)
             .map(user -> passwordEncoder.matches(rawPassword, user.getPasswordHash()))
             .orElse(false);
     }
