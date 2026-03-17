@@ -28,10 +28,19 @@ api.interceptors.response.use(
     return response
   },
   async (error) => {
-    // Check if error response is present and error status is 401 or 403
+
+// Check if error response is present and error status is 401 or 403
+    // Skip refresh logic for auth endpoints to avoid redirect loops on login failures
+    const requestUrl: string = error.config?.url ?? "";
+    const isAuthEndpoint =
+      requestUrl.includes("/auth/login") ||
+      requestUrl.includes("/auth/register") ||
+      requestUrl.includes("/auth/refresh-token");
+
     if (
       error.response &&
-      (error.response.status === 401 || error.response.status === 403)
+      (error.response.status === 401 || error.response.status === 403) &&
+      !isAuthEndpoint
     ) {
       console.error(
         "Response error :: " + error.response.status + " ==>",

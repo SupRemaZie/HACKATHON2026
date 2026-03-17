@@ -11,19 +11,19 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-green-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Inscription</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center text-black">Inscription</h2>
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Nom complet</label>
-            <input type="text" required className="mt-1 w-full p-2 border rounded-md" />
+            <label className="block text-sm font-medium text-black">Nom complet</label>
+            <input type="text" required className="mt-1 w-full p-2 border text-black rounded-md" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
-            <input type="email" required className="mt-1 w-full p-2 border rounded-md" />
+            <label className="block text-sm font-medium text-black">Email</label>
+            <input type="email" required className="mt-1 w-full p-2 border text-black rounded-md" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Mot de passe</label>
-            <input type="password" required className="mt-1 w-full p-2 border rounded-md" />
+            <label className="block text-sm font-medium text-black">Mot de passe</label>
+            <input type="password" required className="mt-1 w-full p-2 border text-black rounded-md" />
           </div>
           <button type="submit" className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition">
             Créer mon compte

@@ -28,7 +28,7 @@ public class JwtService {
         this.issuer = issuer;
     }
 
-    public String generateToken(String email, long expirationMillis) {
+    public String generateToken(String email, String role, long expirationMillis) {
         Instant now = Instant.now();
         Instant expiresAt = now.plusMillis(expirationMillis);
 
@@ -36,6 +36,7 @@ public class JwtService {
             .issuer(issuer)
             .subject(email)
             .claim("email", email)
+            .claim("role", role)
             .claim("type", "access")
             .issuedAt(Date.from(now))
             .expiration(Date.from(expiresAt))
