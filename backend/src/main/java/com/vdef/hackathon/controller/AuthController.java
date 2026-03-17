@@ -70,7 +70,7 @@ public class AuthController {
                 .body(java.util.Map.of("message", "Invalid email or password"));
         }
 
-        String token = jwtService.generateToken(user.getEmail(), expirationMillis);
+        String token = jwtService.generateToken(user.getEmail(), user.getRole(), expirationMillis);
         String refreshToken = jwtService.generateRefreshToken(user.getEmail(), refreshExpirationMillis);
 
         LoginResponseDTO response = new LoginResponseDTO(
@@ -89,7 +89,9 @@ public class AuthController {
     public ResponseEntity<?> refreshToken(@Valid @RequestBody RefreshTokenRequestDTO request) {
         try {
             String email = jwtService.extractEmailFromRefreshToken(request.refreshToken());
-            String token = jwtService.generateToken(email, expirationMillis);
+            UserJPA refreshedUser = serviceUser.getUserByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            String token = jwtService.generateToken(email, refreshedUser.getRole(), expirationMillis);
 
             LoginResponseDTO response = new LoginResponseDTO(
                 token,
