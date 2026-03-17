@@ -1,26 +1,30 @@
 package com.vdef.hackathon.service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Date;
+
+import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.interfaces.DecodedJWT;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 @Service
 public class JwtService {
 
-    private final Algorithm algorithm;
+    private final SecretKey signingKey;
     private final String issuer;
 
     public JwtService(
         @Value("${JWT_SECRET:Use_the_secret_from_env}") String secret,
         @Value("${JWT_ISSUER:carbontrack-api}") String issuer
     ) {
-        this.algorithm = Algorithm.HMAC256(secret);
+        this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.issuer = issuer;
     }
 
@@ -28,41 +32,45 @@ public class JwtService {
         Instant now = Instant.now();
         Instant expiresAt = now.plusMillis(expirationMillis);
 
-        return JWT.create()
-            .withIssuer(issuer)
-            .withSubject(email)
-            .withClaim("email", email)
-            .withClaim("type", "access")
-            .withIssuedAt(now)
-            .withExpiresAt(expiresAt)
-            .sign(algorithm);
+        return Jwts.builder()
+            .issuer(issuer)
+            .subject(email)
+            .claim("email", email)
+            .claim("type", "access")
+            .issuedAt(Date.from(now))
+            .expiration(Date.from(expiresAt))
+            .signWith(signingKey)
+            .compact();
     }
 
     public String generateRefreshToken(String email, long expirationMillis) {
         Instant now = Instant.now();
         Instant expiresAt = now.plusMillis(expirationMillis);
 
-        return JWT.create()
-            .withIssuer(issuer)
-            .withSubject(email)
-            .withClaim("email", email)
-            .withClaim("type", "refresh")
-            .withIssuedAt(now)
-            .withExpiresAt(expiresAt)
-            .sign(algorithm);
+        return Jwts.builder()
+            .issuer(issuer)
+            .subject(email)
+            .claim("email", email)
+            .claim("type", "refresh")
+            .issuedAt(Date.from(now))
+            .expiration(Date.from(expiresAt))
+            .signWith(signingKey)
+            .compact();
     }
 
     public String extractEmailFromRefreshToken(String refreshToken) {
-        DecodedJWT decoded = JWT.require(algorithm)
-            .withIssuer(issuer)
+        Claims claims = Jwts.parser()
+            .verifyWith(signingKey)
+            .requireIssuer(issuer)
             .build()
-            .verify(refreshToken);
+            .parseSignedClaims(refreshToken)
+            .getPayload();
 
-        String tokenType = decoded.getClaim("type").asString();
+        String tokenType = claims.get("type", String.class);
         if (!"refresh".equals(tokenType)) {
-            throw new JWTVerificationException("Token is not a refresh token");
+            throw new JwtException("Token is not a refresh token");
         }
 
-        return decoded.getSubject();
+        return claims.getSubject();
     }
 }
