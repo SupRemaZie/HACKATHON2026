@@ -1,10 +1,28 @@
 package com.vdef.hackathon.controller;
 
+import java.util.List;
+import java.util.Objects;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.vdef.hackathon.dto.site.CreateSiteRequest;
 import com.vdef.hackathon.dto.site.SiteResponse;
 import com.vdef.hackathon.jpa.SiteJPA;
 import com.vdef.hackathon.repository.SiteRepository;
 import com.vdef.hackathon.service.TokenService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,14 +32,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/sites")
@@ -45,8 +55,8 @@ public class SitesController {
             @ApiResponse(responseCode = "401", description = "Non authentifié")
     })
     public ResponseEntity<List<SiteResponse>> listSites() {
-        Long userId = currentUserId();
-        List<SiteResponse> sites = siteRepository.findByCreatedBy(userId)
+                Long userId = currentUserId();
+                List<SiteResponse> sites = siteRepository.findByCreatedBy(userId)
                 .stream().map(this::toResponse).toList();
         return ResponseEntity.ok(sites);
     }
@@ -64,15 +74,15 @@ public class SitesController {
         SiteJPA site = new SiteJPA();
         site.setToken(tokenService.generateUniqueToken());
         site.setCreatedBy(userId);
-        site.setName(request.name());
-        site.setAddress(request.address());
+        site.setName(request.siteName());
+        site.setAddress(request.location());
         site.setCity(request.city());
-        site.setSurfaceM2(request.surfaceM2() != null ? request.surfaceM2().doubleValue() : null);
-        site.setNbEmployees(request.nbEmployees() != null ? request.nbEmployees() : 0);
-        site.setNbWorkstations(request.nbWorkstations() != null ? request.nbWorkstations() : 0);
-        site.setParkingUnderground(request.parkingUnderground() != null ? request.parkingUnderground() : 0);
-        site.setParkingBasement(request.parkingBasement() != null ? request.parkingBasement() : 0);
-        site.setParkingOutdoor(request.parkingOutdoor() != null ? request.parkingOutdoor() : 0);
+        site.setSurfaceM2(request.areaM2() != null ? request.areaM2().doubleValue() : null);
+        site.setNbEmployees(Objects.requireNonNullElse(request.employees(), 0));
+        site.setNbWorkstations(Objects.requireNonNullElse(request.nbWorkstations(), 0));
+        site.setParkingUnderground(Objects.requireNonNullElse(request.parkingUnderground(), 0));
+        site.setParkingBasement(Objects.requireNonNullElse(request.parkingBasement(), 0));
+        site.setParkingOutdoor(Objects.requireNonNullElse(request.parkingOutdoor(), 0));
 
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(siteRepository.save(site)));
     }
@@ -107,11 +117,11 @@ public class SitesController {
             @Valid @RequestBody CreateSiteRequest request) {
         SiteJPA site = findAndVerifyOwnership(token);
 
-        site.setName(request.name());
-        site.setAddress(request.address());
+        site.setName(request.siteName());
+        site.setAddress(request.location());
         site.setCity(request.city());
-        if (request.surfaceM2() != null) site.setSurfaceM2(request.surfaceM2().doubleValue());
-        if (request.nbEmployees() != null) site.setNbEmployees(request.nbEmployees());
+        if (request.areaM2() != null) site.setSurfaceM2(request.areaM2().doubleValue());
+        if (request.employees() != null) site.setNbEmployees(request.employees());
         if (request.nbWorkstations() != null) site.setNbWorkstations(request.nbWorkstations());
         if (request.parkingUnderground() != null) site.setParkingUnderground(request.parkingUnderground());
         if (request.parkingBasement() != null) site.setParkingBasement(request.parkingBasement());
@@ -137,12 +147,12 @@ public class SitesController {
 
     // -------------------------------------------------------------------------
 
-    private Long currentUserId() {
+        private Long currentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !(auth.getPrincipal() instanceof Long)) {
+                if (auth == null || !(auth.getPrincipal() instanceof Long)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Non authentifié");
         }
-        return (Long) auth.getPrincipal();
+                return (Long) auth.getPrincipal();
     }
 
     private SiteJPA findAndVerifyOwnership(String token) {

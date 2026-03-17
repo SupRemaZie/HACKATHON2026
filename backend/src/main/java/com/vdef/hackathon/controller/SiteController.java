@@ -1,13 +1,18 @@
 package com.vdef.hackathon.controller;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.vdef.hackathon.dto.site.CreateSiteRequest;
 import com.vdef.hackathon.jpa.SiteJPA;
 import com.vdef.hackathon.repository.SiteRepository;
-import org.springframework.web.bind.annotation.*;
-import com.vdef.hackathon.service.*;
-
-import java.util.List;
-import java.util.Optional;
+import com.vdef.hackathon.service.ServiceSite;
 
 @RestController
 public class SiteController {
@@ -31,7 +36,7 @@ public class SiteController {
         site.setParkingUnderground(request.parkingSpots());
         site.setParkingOutdoor(request.parkingSpots());
         site.setParkingBasement(request.parkingSpots());
-        site.setCreatedBy(UUID.fromString("00000000-0000-0000-0000-000000000001"));
+        site.setCreatedBy(1L);
         siteRepository.save(site);
         return "ok";
     }

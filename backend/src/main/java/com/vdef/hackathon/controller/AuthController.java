@@ -1,7 +1,9 @@
 package com.vdef.hackathon.controller;
 
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,13 +13,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.vdef.hackathon.dto.auth.AuthResponse;
 import com.vdef.hackathon.dto.auth.LoginRequestDTO;
 import com.vdef.hackathon.dto.auth.LoginResponseDTO;
 import com.vdef.hackathon.dto.auth.RefreshTokenRequestDTO;
 import com.vdef.hackathon.dto.auth.RegisterRequest;
 import com.vdef.hackathon.dto.auth.UserSummaryDTO;
-import com.vdef.hackathon.jpa.UserJPA;
 import com.vdef.hackathon.jpa.UserJPA;
 import com.vdef.hackathon.repository.UserRepository;
 import com.vdef.hackathon.service.JwtService;
@@ -26,13 +26,6 @@ import com.vdef.hackathon.service.ServiceUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -49,12 +42,14 @@ public class AuthController {
     public AuthController(
         JwtService jwtService,
         ServiceUser serviceUser,
+        UserRepository userRepository,
         PasswordEncoder passwordEncoder,
-        @org.springframework.beans.factory.annotation.Value("${JWT_EXPIRATION_MS:3600000}") long expirationMillis,
-        @org.springframework.beans.factory.annotation.Value("${JWT_REFRESH_EXPIRATION_MS:604800000}") long refreshExpirationMillis
+        @Value("${JWT_EXPIRATION_MS:3600000}") long expirationMillis,
+        @Value("${JWT_REFRESH_EXPIRATION_MS:604800000}") long refreshExpirationMillis
     ) {
         this.jwtService = jwtService;
         this.serviceUser = serviceUser;
+        this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.expirationMillis = expirationMillis;
         this.refreshExpirationMillis = refreshExpirationMillis;
@@ -67,15 +62,23 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO request) {
-        UserJPA user = serviceUser.getUserByEmail(request.email()).orElse(null);
-
-        boolean isValid = user != null
-            && passwordEncoder.matches(request.password(), user.getPasswordHash());
-
-        if (!isValid) {
+        var userOpt = serviceUser.getUserByEmail(request.email());
+        if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(java.util.Map.of("message", "Invalid email or password"));
+                .body(Map.of("message", "Invalid email or password"));
         }
+
+        UserJPA user = userOpt.get();
+
+        if (user.getPasswordHash() == null || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("message", "Invalid email or password"));
+        }
+
+        // if (user.getRole() == null) {
+        //     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        //         .body(Map.of("message", "User role is not configured"));
+        // }
 
         String token = jwtService.generateToken(user.getEmail(), user.getRole(), expirationMillis);
         String refreshToken = jwtService.generateRefreshToken(user.getEmail(), refreshExpirationMillis);
@@ -88,6 +91,9 @@ public class AuthController {
             refreshToken,
             refreshExpirationMillis / 1000
         );
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/register")
     @Operation(summary = "Créer un compte utilisateur")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
@@ -100,9 +106,19 @@ public class AuthController {
         user.setEmail(request.email());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setFullName(request.fullName());
+
+        // Set a default role here before saving.
+        // Example:
+        // user.setRole(UserRole.USER);
+
         userRepository.save(user);
 
-        String token = jwtService.generateToken(user.getEmail(), expirationMillis);
+        if (user.getRole() == null) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("message", "User role is not configured"));
+        }
+
+        String token = jwtService.generateToken(user.getEmail(), user.getRole(), expirationMillis);
         String refreshToken = jwtService.generateRefreshToken(user.getEmail(), refreshExpirationMillis);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new LoginResponseDTO(
@@ -118,6 +134,12 @@ public class AuthController {
             String email = jwtService.extractEmailFromRefreshToken(request.refreshToken());
             UserJPA refreshedUser = serviceUser.getUserByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+            if (refreshedUser.getRole() == null) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "User role is not configured"));
+            }
+
             String token = jwtService.generateToken(email, refreshedUser.getRole(), expirationMillis);
 
             LoginResponseDTO response = new LoginResponseDTO(
@@ -132,7 +154,7 @@ public class AuthController {
             return ResponseEntity.ok(response);
         } catch (RuntimeException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("message", "Token invalide ou expiré"));
+                .body(Map.of("message", "Invalid or expired refresh token"));
         }
     }
 }

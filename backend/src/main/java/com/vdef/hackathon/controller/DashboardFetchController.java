@@ -1,4 +1,4 @@
-package com.vdef.hackathon.web;
+package com.vdef.hackathon.controller;
 
 import com.vdef.hackathon.dto.SiteWithCO2DTO;
 import com.vdef.hackathon.dto.dashboard.DashboardKpiResponse;

@@ -1,12 +1,13 @@
 package com.vdef.hackathon.controller;
 
-import com.vdef.hackathon.jpa.UserJPA;
+import java.util.Optional;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
-import com.vdef.hackathon.service.*;
 
-import java.util.Optional;
+import com.vdef.hackathon.jpa.UserJPA;
+import com.vdef.hackathon.service.ServiceUser;
 
 @RestController
 public class UserController

@@ -1,7 +1,14 @@
 package com.vdef.hackathon.jpa;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "users")
@@ -27,6 +34,7 @@ public class UserJPA {
     private LocalDateTime createdAt;
 
     @PrePersist
+    @SuppressWarnings("unused")
     private void prePersist() {
         if (createdAt == null) createdAt = LocalDateTime.now();
         if (role == null) role = "USER";
@@ -35,11 +43,6 @@ public class UserJPA {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
-
-    public String getFull_name() { return this.full_name; }
-    public void setFull_name(String full_name) {this.full_name = full_name;}
-  
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 

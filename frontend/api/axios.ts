@@ -1,78 +1,93 @@
 import axios from "axios"
-import { useRouter } from "next/router"
 
 export const api = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: "http://localhost:8080/api",
   headers: {
     "Content-Type": "application/json",
   },
 })
 
+const getBackendErrorMessage = (error: any): string => {
+  const data = error?.response?.data
+
+  if (typeof data === "string") {
+    return data
+  }
+
+  if (data?.message) {
+    return data.message
+  }
+
+  if (data?.error) {
+    return data.error
+  }
+
+  return error?.message || "Unknown error"
+}
+
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token")
     if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`
+      config.headers = config.headers ?? {}
+      config.headers.Authorization = `Bearer ${token}`
     }
     return config
   },
   (error) => {
-    console.error("Request error:", error)
+    console.error("Request error:", getBackendErrorMessage(error))
     return Promise.reject(error)
   }
 )
 
-// Response interceptor to handle 401 and 403 response
 api.interceptors.response.use(
-  (response) => {
-    return response
-  },
+  (response) => response,
   async (error) => {
-
-// Check if error response is present and error status is 401 or 403
-    // Skip refresh logic for auth endpoints to avoid redirect loops on login failures
-    const requestUrl: string = error.config?.url ?? "";
+    const requestUrl: string = error.config?.url ?? ""
     const isAuthEndpoint =
       requestUrl.includes("/auth/login") ||
       requestUrl.includes("/auth/register") ||
-      requestUrl.includes("/auth/refresh-token");
+      requestUrl.includes("/auth/refresh-token")
+
+    const backendMessage = getBackendErrorMessage(error)
+    console.error("API error:", backendMessage)
 
     if (
       error.response &&
       (error.response.status === 401 || error.response.status === 403) &&
       !isAuthEndpoint
     ) {
-      console.error(
-        "Response error :: " + error.response.status + " ==>",
-        error.response
-      )
-
-      // fetch new access token
       try {
-        const refresh_token_url = "/api/auth/refresh-token/"; 
-        const response = await api.post(refresh_token_url, {
-          refresh: localStorage.getItem("refresh"), // Get refresh token from local storage
-        })
+        const refreshToken = localStorage.getItem("refreshToken")
 
-        const newAccesToken = response.data.access
+        if (!refreshToken) {
+          window.location.href = "/auth/login"
+          return Promise.reject(error)
+        }
 
-        localStorage.setItem("access", newAccesToken) // Update the access token in local storage
+        const response = await axios.post(
+          "http://localhost:8080/api/auth/refresh-token",
+          { refreshToken }
+        )
 
-        console.log("Access token refreshed successfully");
-        // Re-try the original request
+        const newToken = response.data.token
+
+        localStorage.setItem("token", newToken)
+
         const originalRequest = error.config
-        originalRequest.headers.Authorization = `Bearer ${newAccesToken}`
-        return await axios(originalRequest)
+        originalRequest.headers = originalRequest.headers ?? {}
+        originalRequest.headers.Authorization = `Bearer ${newToken}`
+
+        return axios(originalRequest)
       } catch (refreshError) {
-        // incase of failed refresh, re-direct to login page
-        const router = useRouter()
-        router.push("/auth/login")
-
-        // or window.location.href = "/login" if you do not use react-router-dom
-
-        return await Promise.reject(refreshError)
+        console.error("Refresh token error:", getBackendErrorMessage(refreshError))
+        localStorage.removeItem("token")
+        localStorage.removeItem("refreshToken")
+        window.location.href = "/auth/login"
+        return Promise.reject(refreshError)
       }
     }
+
     return Promise.reject(error)
   }
 )

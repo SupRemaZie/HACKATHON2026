@@ -1,13 +1,14 @@
 package com.vdef.hackathon.service;
 
-import com.vdef.hackathon.dto.auth.UserSummaryDTO;
-import com.vdef.hackathon.jpa.UserJPA;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.vdef.hackathon.repository.*;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Optional;
+import com.vdef.hackathon.dto.auth.UserSummaryDTO;
+import com.vdef.hackathon.jpa.UserJPA;
+import com.vdef.hackathon.repository.UserRepository;
 
 @Service
 public class ServiceUser
@@ -42,7 +43,7 @@ public class ServiceUser
             .map(user -> new UserSummaryDTO(
                 user.getId(),
                 user.getEmail(),
-                user.getFull_name(),
+                user.getFullName(),
                 user.getRole()
             ))
             .toList();

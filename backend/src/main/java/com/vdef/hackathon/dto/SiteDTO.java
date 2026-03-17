@@ -1,11 +1,9 @@
 package com.vdef.hackathon.dto;
 
-import java.util.UUID;
-
 public class SiteDTO {
 
-    private UUID id;
-    private UUID createdBy;
+    private Long id;
+    private Long createdBy;
     private String name;
     private String address;
     private String city;
@@ -20,7 +18,7 @@ public class SiteDTO {
 
     public SiteDTO() {}
 
-    public SiteDTO(UUID id, UUID createdBy, String name, String address, String city,
+    public SiteDTO(Long id, Long createdBy, String name, String address, String city,
                    Double surfaceM2, Integer nbEmployees, Integer nbWorkstations,
                    Integer parkingUnderground, Integer parkingBasement, Integer parkingOutdoor,
                    Double energyKwhYear, String energySource) {
